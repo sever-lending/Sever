@@ -3,13 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Sever — peer-to-peer lending API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: Auth
+    description: Browser and mobile authentication endpoints.
+  - name: profile
+    description: User profile and trust score
+  - name: loans
+    description: Loan listings, requests, and funding
+  - name: repayments
+    description: Repayment installments
+  - name: dashboard
+    description: Dashboard overview and platform stats
+  - name: activity
+    description: Activity feed
 paths:
   /healthz:
     get:
@@ -24,7 +36,421 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/user:
+    get:
+      tags: [Auth]
+      operationId: getCurrentAuthUser
+      summary: Get the currently authenticated user
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Auth status resolved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserEnvelope'
+  /login:
+    get:
+      tags: [Auth]
+      operationId: beginBrowserLogin
+      summary: Start the browser OIDC login flow
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the OIDC authorization endpoint.
+  /callback:
+    get:
+      tags: [Auth]
+      operationId: handleBrowserLoginCallback
+      summary: Complete the browser OIDC login flow
+      parameters:
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: iss
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uri
+      responses:
+        '302':
+          description: Redirect to the returnTo path on success.
+  /logout:
+    get:
+      tags: [Auth]
+      operationId: logoutBrowserSession
+      summary: Clear the session and begin OIDC logout
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '302':
+          description: Redirect to the OIDC provider logout URL.
+  /mobile-auth/token-exchange:
+    post:
+      tags: [Auth]
+      operationId: exchangeMobileAuthorizationCode
+      summary: Exchange a mobile OIDC code for a session token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MobileTokenExchangeRequest'
+      responses:
+        '200':
+          description: Session created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileTokenExchangeSuccess'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Token did not contain usable claims.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Token exchange failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /mobile-auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logoutMobileSession
+      summary: Delete a mobile session token
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+      responses:
+        '200':
+          description: Logout processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutSuccess'
+
+  /profile/me:
+    get:
+      tags: [profile]
+      operationId: getMyProfile
+      summary: Get my profile, wallet balance, and trust score
+      responses:
+        '200':
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProfile'
+    patch:
+      tags: [profile]
+      operationId: updateMyProfile
+      summary: Update my display name and bio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileBody'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProfile'
+
+  /profile/deposit:
+    post:
+      tags: [profile]
+      operationId: depositFunds
+      summary: Add funds to wallet (simulated deposit)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositBody'
+      responses:
+        '200':
+          description: New balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProfile'
+
+  /profile/withdraw:
+    post:
+      tags: [profile]
+      operationId: withdrawFunds
+      summary: Withdraw funds from wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawBody'
+      responses:
+        '200':
+          description: New balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProfile'
+
+  /loans:
+    get:
+      tags: [loans]
+      operationId: listLoans
+      summary: List loan requests open to funding (marketplace)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, funded, repaying, repaid, defaulted, all]
+        - name: minRate
+          in: query
+          schema: { type: number }
+        - name: maxRate
+          in: query
+          schema: { type: number }
+        - name: purpose
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Loan list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanSummary'
+
+  /loans/{id}:
+    get:
+      tags: [loans]
+      operationId: getLoan
+      summary: Get a single loan with full details, fundings, and schedule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Loan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDetail'
+
+  /loans/request:
+    post:
+      tags: [loans]
+      operationId: createLoanRequest
+      summary: Borrower posts a new loan request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLoanBody'
+      responses:
+        '200':
+          description: Created loan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDetail'
+
+  /loans/{id}/fund:
+    post:
+      tags: [loans]
+      operationId: fundLoan
+      summary: Lender contributes funds to an open loan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundLoanRequest'
+      responses:
+        '200':
+          description: Updated loan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDetail'
+
+  /loans/{id}/cancel:
+    post:
+      tags: [loans]
+      operationId: cancelLoan
+      summary: Borrower cancels their own open loan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Cancelled loan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDetail'
+
+  /loans/mine/borrowing:
+    get:
+      tags: [loans]
+      operationId: listMyBorrowings
+      summary: Loans I am borrowing
+      responses:
+        '200':
+          description: My borrowed loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanSummary'
+
+  /loans/mine/lending:
+    get:
+      tags: [loans]
+      operationId: listMyLendings
+      summary: Loans I have funded (in part or whole)
+      responses:
+        '200':
+          description: My funded loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanSummary'
+
+  /repayments/{installmentId}/pay:
+    post:
+      tags: [repayments]
+      operationId: payInstallment
+      summary: Borrower makes a repayment on a single installment
+      parameters:
+        - name: installmentId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Updated loan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanDetail'
+
+  /dashboard/overview:
+    get:
+      tags: [dashboard]
+      operationId: getDashboardOverview
+      summary: Personal dashboard — totals, exposure, returns
+      responses:
+        '200':
+          description: Overview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardOverview'
+
+  /dashboard/platform-stats:
+    get:
+      tags: [dashboard]
+      operationId: getPlatformStats
+      summary: Public platform stats (no auth) — total volume, active loans, lenders
+      responses:
+        '200':
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformStats'
+
+  /activity:
+    get:
+      tags: [activity]
+      operationId: getRecentActivity
+      summary: Recent activity feed for the current user (fundings, repayments, requests)
+      responses:
+        '200':
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivityItem'
+
+  /lenders/leaderboard:
+    get:
+      tags: [dashboard]
+      operationId: getLenderLeaderboard
+      summary: Top lenders by total funded
+      responses:
+        '200':
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LenderRank'
+
 components:
+  parameters:
+    AuthorizationSessionHeader:
+      name: Authorization
+      in: header
+      required: false
+      description: Opaque session token — `Bearer <sid>`.
+      schema:
+        type: string
+    SessionCookie:
+      name: sid
+      in: cookie
+      required: false
+      description: Browser session cookie.
+      schema:
+        type: string
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +460,306 @@ components:
       required:
         - status
 
+    AuthUser:
+      type: object
+      required: [id, email, firstName, lastName, profileImageUrl]
+      properties:
+        id:
+          type: string
+        email:
+          type: [string, 'null']
+          format: email
+        firstName:
+          type: [string, 'null']
+        lastName:
+          type: [string, 'null']
+        profileImageUrl:
+          type: [string, 'null']
+    AuthUserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          oneOf:
+            - $ref: '#/components/schemas/AuthUser'
+            - type: 'null'
+    MobileTokenExchangeRequest:
+      type: object
+      required: [code, code_verifier, redirect_uri, state]
+      properties:
+        code: { type: string, minLength: 1 }
+        code_verifier: { type: string, minLength: 1 }
+        redirect_uri: { type: string, minLength: 1, format: uri }
+        state: { type: string, minLength: 1 }
+        nonce: { type: string, minLength: 1 }
+    MobileTokenExchangeSuccess:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    LogoutSuccess:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          const: true
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+
+    MyProfile:
+      type: object
+      required:
+        - id
+        - displayName
+        - bio
+        - profileImageUrl
+        - walletBalance
+        - trustScore
+        - tier
+        - loansFunded
+        - loansBorrowed
+        - totalLent
+        - totalBorrowed
+        - onTimePayments
+        - latePayments
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        bio: { type: [string, 'null'] }
+        profileImageUrl: { type: [string, 'null'] }
+        walletBalance: { type: number, description: "Available balance in USD" }
+        trustScore: { type: integer, description: "0-1000 community trust score" }
+        tier: { type: string, enum: [unverified, bronze, silver, gold, platinum] }
+        loansFunded: { type: integer }
+        loansBorrowed: { type: integer }
+        totalLent: { type: number }
+        totalBorrowed: { type: number }
+        onTimePayments: { type: integer }
+        latePayments: { type: integer }
+
+    UpdateProfileBody:
+      type: object
+      required: [displayName]
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 60 }
+        bio: { type: string, maxLength: 280 }
+
+    DepositBody:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: number, minimum: 10, maximum: 100000 }
+
+    WithdrawBody:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: number, minimum: 1 }
+
+    LoanSummary:
+      type: object
+      required:
+        - id
+        - borrowerId
+        - borrowerName
+        - borrowerTrustScore
+        - borrowerTier
+        - principal
+        - fundedAmount
+        - interestRate
+        - termMonths
+        - purpose
+        - title
+        - status
+        - createdAt
+      properties:
+        id: { type: string }
+        borrowerId: { type: string }
+        borrowerName: { type: string }
+        borrowerTrustScore: { type: integer }
+        borrowerTier: { type: string }
+        principal: { type: number }
+        fundedAmount: { type: number }
+        interestRate: { type: number, description: "Annual percentage rate (fixed)" }
+        termMonths: { type: integer }
+        purpose: { type: string }
+        title: { type: string }
+        status: { type: string, enum: [open, funded, repaying, repaid, defaulted, cancelled] }
+        createdAt: { type: string, format: date-time }
+
+    LoanDetail:
+      type: object
+      required:
+        - id
+        - borrowerId
+        - borrowerName
+        - borrowerTrustScore
+        - borrowerTier
+        - borrowerBio
+        - principal
+        - fundedAmount
+        - interestRate
+        - termMonths
+        - purpose
+        - title
+        - description
+        - status
+        - createdAt
+        - originationFee
+        - totalRepayment
+        - monthlyPayment
+        - fundings
+        - schedule
+      properties:
+        id: { type: string }
+        borrowerId: { type: string }
+        borrowerName: { type: string }
+        borrowerTrustScore: { type: integer }
+        borrowerTier: { type: string }
+        borrowerBio: { type: [string, 'null'] }
+        principal: { type: number }
+        fundedAmount: { type: number }
+        interestRate: { type: number }
+        termMonths: { type: integer }
+        purpose: { type: string }
+        title: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [open, funded, repaying, repaid, defaulted, cancelled] }
+        createdAt: { type: string, format: date-time }
+        originationFee: { type: number, description: "Platform origination fee deducted on funding" }
+        totalRepayment: { type: number }
+        monthlyPayment: { type: number }
+        fundings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Funding'
+        schedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/Installment'
+
+    Funding:
+      type: object
+      required: [id, lenderId, lenderName, amount, sharePct, createdAt]
+      properties:
+        id: { type: string }
+        lenderId: { type: string }
+        lenderName: { type: string }
+        amount: { type: number }
+        sharePct: { type: number, description: "Lender's share of the loan, percentage" }
+        createdAt: { type: string, format: date-time }
+
+    Installment:
+      type: object
+      required: [id, dueDate, amount, status, paidAt, lateFee]
+      properties:
+        id: { type: string }
+        dueDate: { type: string, format: date-time }
+        amount: { type: number }
+        status: { type: string, enum: [pending, paid, late] }
+        paidAt: { type: [string, 'null'], format: date-time }
+        lateFee: { type: number }
+
+    CreateLoanBody:
+      type: object
+      required: [title, principal, interestRate, termMonths, purpose, description]
+      properties:
+        title: { type: string, minLength: 4, maxLength: 80 }
+        principal: { type: number, minimum: 100, maximum: 50000 }
+        interestRate: { type: number, minimum: 1, maximum: 35 }
+        termMonths: { type: integer, minimum: 3, maximum: 60 }
+        purpose:
+          type: string
+          enum: [debt-consolidation, home-improvement, medical, education, business, vehicle, wedding, vacation, emergency, other]
+        description: { type: string, minLength: 10, maxLength: 600 }
+
+    FundLoanRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: number, minimum: 25 }
+
+    DashboardOverview:
+      type: object
+      required:
+        - walletBalance
+        - totalLent
+        - totalBorrowed
+        - activeLending
+        - activeBorrowing
+        - expectedReturns
+        - upcomingPayments
+        - portfolioYield
+        - trustScore
+      properties:
+        walletBalance: { type: number }
+        totalLent: { type: number }
+        totalBorrowed: { type: number }
+        activeLending: { type: number, description: "Outstanding principal lent" }
+        activeBorrowing: { type: number, description: "Outstanding principal owed" }
+        expectedReturns: { type: number, description: "Projected interest income from active loans" }
+        upcomingPayments:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpcomingPayment'
+        portfolioYield: { type: number, description: "Weighted-average APR of lender's active funded loans" }
+        trustScore: { type: integer }
+
+    UpcomingPayment:
+      type: object
+      required: [installmentId, loanId, loanTitle, dueDate, amount, role]
+      properties:
+        installmentId: { type: string }
+        loanId: { type: string }
+        loanTitle: { type: string }
+        dueDate: { type: string, format: date-time }
+        amount: { type: number }
+        role:
+          type: string
+          enum: [borrower, lender]
+          description: "borrower = you owe; lender = you receive"
+
+    PlatformStats:
+      type: object
+      required:
+        - totalVolume
+        - activeLoans
+        - totalLenders
+        - totalBorrowers
+        - averageRate
+        - repaidLoans
+      properties:
+        totalVolume: { type: number }
+        activeLoans: { type: integer }
+        totalLenders: { type: integer }
+        totalBorrowers: { type: integer }
+        averageRate: { type: number }
+        repaidLoans: { type: integer }
+
+    ActivityItem:
+      type: object
+      required: [id, kind, message, amount, createdAt, loanId]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          enum: [loan_created, loan_funded, loan_fully_funded, repayment_made, repayment_received, loan_repaid]
+        message: { type: string }
+        amount: { type: number }
+        createdAt: { type: string, format: date-time }
+        loanId: { type: [string, 'null'] }
+
+    LenderRank:
+      type: object
+      required: [userId, displayName, totalLent, loansFunded, trustScore, tier]
+      properties:
+        userId: { type: string }
+        displayName: { type: string }
+        totalLent: { type: number }
+        loansFunded: { type: integer }
+        trustScore: { type: integer }
+        tier: { type: string }
