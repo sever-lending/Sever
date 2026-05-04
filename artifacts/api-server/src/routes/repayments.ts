@@ -26,7 +26,7 @@ import { mapLoanDetail } from "../lib/loan-mapper";
 const router: IRouter = Router();
 
 router.post(
-  "/installments/:installmentId/pay",
+  "/repayments/:installmentId/pay",
   async (req, res): Promise<void> => {
     if (!req.isAuthenticated()) {
       res.status(401).json({ error: "Unauthorized" });

@@ -93,6 +93,59 @@ router.get("/loans", async (req, res): Promise<void> => {
   res.json(ListLoansResponse.parse(items));
 });
 
+router.get("/loans/mine/borrowing", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const loans = await db
+    .select()
+    .from(loansTable)
+    .where(eq(loansTable.borrowerId, req.user.id))
+    .orderBy(desc(loansTable.createdAt));
+  const borrowers = await loadBorrowers([req.user.id]);
+  const items = loans.map((l) =>
+    mapLoanSummary(l, {
+      id: l.borrowerId,
+      name: borrowers.get(l.borrowerId)?.name ?? "You",
+      trustScore: borrowers.get(l.borrowerId)?.trustScore ?? 500,
+      bio: null,
+    }),
+  );
+  res.json(ListMyBorrowingsResponse.parse(items));
+});
+
+router.get("/loans/mine/lending", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const loanIdsRows = await db
+    .selectDistinct({ loanId: fundingsTable.loanId })
+    .from(fundingsTable)
+    .where(eq(fundingsTable.lenderId, req.user.id));
+  const ids = loanIdsRows.map((r) => r.loanId);
+  if (ids.length === 0) {
+    res.json([]);
+    return;
+  }
+  const loans = await db
+    .select()
+    .from(loansTable)
+    .where(inArray(loansTable.id, ids))
+    .orderBy(desc(loansTable.createdAt));
+  const borrowers = await loadBorrowers(loans.map((l) => l.borrowerId));
+  const items = loans.map((l) =>
+    mapLoanSummary(l, {
+      id: l.borrowerId,
+      name: borrowers.get(l.borrowerId)?.name ?? "Unknown",
+      trustScore: borrowers.get(l.borrowerId)?.trustScore ?? 500,
+      bio: null,
+    }),
+  );
+  res.json(ListMyLendingsResponse.parse(items));
+});
+
 router.get("/loans/:id", async (req, res): Promise<void> => {
   const params = GetLoanParams.safeParse(req.params);
   if (!params.success) {
@@ -508,59 +561,6 @@ router.post("/loans/:id/cancel", async (req, res): Promise<void> => {
     [],
   );
   res.json(CancelLoanResponse.parse(detail));
-});
-
-router.get("/loans/mine/borrowing", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
-  const loans = await db
-    .select()
-    .from(loansTable)
-    .where(eq(loansTable.borrowerId, req.user.id))
-    .orderBy(desc(loansTable.createdAt));
-  const borrowers = await loadBorrowers([req.user.id]);
-  const items = loans.map((l) =>
-    mapLoanSummary(l, {
-      id: l.borrowerId,
-      name: borrowers.get(l.borrowerId)?.name ?? "You",
-      trustScore: borrowers.get(l.borrowerId)?.trustScore ?? 500,
-      bio: null,
-    }),
-  );
-  res.json(ListMyBorrowingsResponse.parse(items));
-});
-
-router.get("/loans/mine/lending", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
-  const loanIdsRows = await db
-    .selectDistinct({ loanId: fundingsTable.loanId })
-    .from(fundingsTable)
-    .where(eq(fundingsTable.lenderId, req.user.id));
-  const ids = loanIdsRows.map((r) => r.loanId);
-  if (ids.length === 0) {
-    res.json([]);
-    return;
-  }
-  const loans = await db
-    .select()
-    .from(loansTable)
-    .where(inArray(loansTable.id, ids))
-    .orderBy(desc(loansTable.createdAt));
-  const borrowers = await loadBorrowers(loans.map((l) => l.borrowerId));
-  const items = loans.map((l) =>
-    mapLoanSummary(l, {
-      id: l.borrowerId,
-      name: borrowers.get(l.borrowerId)?.name ?? "Unknown",
-      trustScore: borrowers.get(l.borrowerId)?.trustScore ?? 500,
-      bio: null,
-    }),
-  );
-  res.json(ListMyLendingsResponse.parse(items));
 });
 
 export default router;

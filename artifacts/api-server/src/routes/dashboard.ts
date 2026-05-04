@@ -199,19 +199,19 @@ router.get("/dashboard/overview", async (req, res): Promise<void> => {
   );
 });
 
-router.get("/platform/stats", async (_req, res): Promise<void> => {
+router.get("/dashboard/platform-stats", async (_req, res): Promise<void> => {
   const [volume] = await db
     .select({
       total: sql<string>`coalesce(sum(${loansTable.principal}), 0)::text`,
     })
     .from(loansTable)
     .where(
-      inArray(loansTable.status, ["repaying", "repaid", "funded"]),
+      inArray(loansTable.status, ["open", "funded", "repaying", "repaid"]),
     );
   const [active] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(loansTable)
-    .where(eq(loansTable.status, "repaying"));
+    .where(inArray(loansTable.status, ["open", "funded", "repaying"]));
   const [repaid] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(loansTable)
@@ -240,7 +240,7 @@ router.get("/platform/stats", async (_req, res): Promise<void> => {
   );
 });
 
-router.get("/activity/recent", async (req, res): Promise<void> => {
+router.get("/activity", async (req, res): Promise<void> => {
   if (!req.isAuthenticated()) {
     res.status(401).json({ error: "Unauthorized" });
     return;
