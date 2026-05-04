@@ -18,6 +18,7 @@ import { Portfolio } from "@/pages/portfolio";
 import { Wallet } from "@/pages/wallet";
 import { Profile } from "@/pages/profile";
 import { Lenders } from "@/pages/lenders";
+import { Admin } from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,8 @@ function Router() {
         <Route path="/profile">
           <ProtectedRoute><Profile /></ProtectedRoute>
         </Route>
+
+        <Route path="/admin" component={Admin} />
         
         <Route component={NotFound} />
       </Switch>

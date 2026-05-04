@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
 
+const LOGO_URL = `${import.meta.env.BASE_URL}sever-logo.png`;
+
 interface LayoutProps {
   children: ReactNode;
 }
@@ -33,9 +35,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="container flex h-16 items-center w-full px-4 md:px-6">
           <div className="flex gap-6 md:gap-10">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="font-bold inline-block text-xl tracking-tighter">
-                SEVER<span className="text-primary">.</span>
-              </span>
+              <img src={LOGO_URL} alt="Sever" className="h-9 w-auto" />
             </Link>
             <nav className="hidden md:flex gap-6">
               {navLinks.map((link) => (
