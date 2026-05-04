@@ -9,6 +9,7 @@ import {
   profilesTable,
   platformRevenueTable,
 } from "@workspace/db";
+import { notify } from "../lib/notify";
 import {
   PayInstallmentParams,
   PayInstallmentResponse,
@@ -191,6 +192,46 @@ router.post(
     if ("error" in result) {
       res.status(result.status ?? 500).json({ error: result.error });
       return;
+    }
+
+    // Fire notifications best-effort
+    try {
+      const [paidLoan] = await db
+        .select()
+        .from(loansTable)
+        .where(eq(loansTable.id, result.loanId));
+      const paidFundings = await db
+        .select({ lenderId: fundingsTable.lenderId, amount: fundingsTable.amount })
+        .from(fundingsTable)
+        .where(eq(fundingsTable.loanId, result.loanId));
+      const totalFunded = paidFundings.reduce((s, f) => {
+        const v = parseFloat(f.amount);
+        return s + (Number.isFinite(v) ? v : 0);
+      }, 0) || 1;
+      type N = { userId: string; loanId: string; kind: "repayment_received" | "loan_repaid"; title: string; body: string };
+      const notifList: N[] = [];
+      for (const f of paidFundings) {
+        const share = (parseFloat(f.amount) / totalFunded) * 100;
+        notifList.push({
+          userId: f.lenderId,
+          loanId: result.loanId,
+          kind: "repayment_received",
+          title: "Repayment received.",
+          body: `"${paidLoan?.title}" — your share (${share.toFixed(1)}%) landed in your wallet.`,
+        });
+      }
+      if (paidLoan?.status === "repaid") {
+        notifList.push({
+          userId: userId,
+          loanId: result.loanId,
+          kind: "loan_repaid",
+          title: "Loan fully repaid.",
+          body: `Congratulations — "${paidLoan.title}" is completely paid off.`,
+        });
+      }
+      await notify(notifList);
+    } catch {
+      // non-blocking
     }
 
     const [loan] = await db

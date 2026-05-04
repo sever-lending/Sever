@@ -326,6 +326,37 @@ export interface LenderRank {
   tier: string;
 }
 
+export type NotificationItemKind =
+  (typeof NotificationItemKind)[keyof typeof NotificationItemKind];
+
+export const NotificationItemKind = {
+  loan_funded: "loan_funded",
+  loan_fully_funded: "loan_fully_funded",
+  repayment_received: "repayment_received",
+  loan_repaid: "loan_repaid",
+  payment_due_soon: "payment_due_soon",
+  payment_overdue: "payment_overdue",
+} as const;
+
+export interface NotificationItem {
+  id: string;
+  kind: NotificationItemKind;
+  title: string;
+  body: string;
+  read: boolean;
+  createdAt: string;
+  /** @nullable */
+  loanId: string | null;
+}
+
+export interface UnreadCountResponse {
+  count: number;
+}
+
+export interface MarkAllReadResponse {
+  updated: number;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */
@@ -359,3 +390,7 @@ export const ListLoansStatus = {
   defaulted: "defaulted",
   all: "all",
 } as const;
+
+export type ListNotificationsParams = {
+  unreadOnly?: boolean;
+};

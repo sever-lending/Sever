@@ -33,6 +33,7 @@ import {
 } from "../lib/lending";
 import { mapLoanDetail, mapLoanSummary } from "../lib/loan-mapper";
 import { ensureProfile } from "./profile";
+import { notify } from "../lib/notify";
 
 const router: IRouter = Router();
 
@@ -352,6 +353,47 @@ router.post("/loans/:id/fund", async (req, res): Promise<void> => {
     .from(loansTable)
     .where(eq(loansTable.id, params.data.id));
   const borrowers = await loadBorrowers([loan!.borrowerId]);
+
+  // Fire notifications (best-effort, outside tx)
+  try {
+    type N = { userId: string; loanId: string; kind: "loan_funded" | "loan_fully_funded"; title: string; body: string };
+    const notifList: N[] = [];
+    notifList.push({
+      userId: lenderId,
+      loanId: loan!.id,
+      kind: "loan_funded",
+      title: "Funding confirmed.",
+      body: `Your contribution to "${loan!.title}" has been recorded.`,
+    });
+    if (loan!.status === "repaying") {
+      notifList.push({
+        userId: loan!.borrowerId,
+        loanId: loan!.id,
+        kind: "loan_fully_funded",
+        title: "Loan fully funded.",
+        body: `"${loan!.title}" reached its target. Funds have been disbursed to your wallet.`,
+      });
+      const allFundings = await db
+        .select({ lenderId: fundingsTable.lenderId })
+        .from(fundingsTable)
+        .where(eq(fundingsTable.loanId, loan!.id));
+      for (const f of allFundings) {
+        if (f.lenderId !== lenderId) {
+          notifList.push({
+            userId: f.lenderId,
+            loanId: loan!.id,
+            kind: "loan_fully_funded",
+            title: "Loan fully funded.",
+            body: `"${loan!.title}" is now fully funded and repayments will begin.`,
+          });
+        }
+      }
+    }
+    await notify(notifList);
+  } catch {
+    // non-blocking
+  }
+
   const b = borrowers.get(loan!.borrowerId);
 
   const fundings = await db

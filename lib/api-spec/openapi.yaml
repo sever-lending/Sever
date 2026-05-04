@@ -22,6 +22,8 @@ tags:
     description: Dashboard overview and platform stats
   - name: activity
     description: Activity feed
+  - name: notifications
+    description: In-app notification bell
 paths:
   /healthz:
     get:
@@ -434,6 +436,72 @@ paths:
                 items:
                   $ref: '#/components/schemas/LenderRank'
 
+  /notifications:
+    get:
+      tags: [notifications]
+      operationId: listNotifications
+      summary: List notifications for the current user (newest first)
+      parameters:
+        - name: unreadOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationItem'
+
+  /notifications/unread-count:
+    get:
+      tags: [notifications]
+      operationId: getUnreadNotificationCount
+      summary: Count of unread notifications
+      responses:
+        '200':
+          description: Count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCountResponse'
+
+  /notifications/read-all:
+    post:
+      tags: [notifications]
+      operationId: markAllNotificationsRead
+      summary: Mark every notification as read
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkAllReadResponse'
+
+  /notifications/{notificationId}/read:
+    patch:
+      tags: [notifications]
+      operationId: markNotificationRead
+      summary: Mark a single notification as read
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationItem'
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -763,3 +831,29 @@ components:
         loansFunded: { type: integer }
         trustScore: { type: integer }
         tier: { type: string }
+
+    NotificationItem:
+      type: object
+      required: [id, kind, title, body, read, createdAt, loanId]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          enum: [loan_funded, loan_fully_funded, repayment_received, loan_repaid, payment_due_soon, payment_overdue]
+        title: { type: string }
+        body: { type: string }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        loanId: { type: [string, 'null'] }
+
+    UnreadCountResponse:
+      type: object
+      required: [count]
+      properties:
+        count: { type: integer }
+
+    MarkAllReadResponse:
+      type: object
+      required: [updated]
+      properties:
+        updated: { type: integer }

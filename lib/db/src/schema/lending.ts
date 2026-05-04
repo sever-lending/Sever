@@ -155,8 +155,33 @@ export const platformRevenueTable = pgTable("platform_revenue", {
     .defaultNow(),
 });
 
+export const notificationsTable = pgTable(
+  "notifications",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    loanId: varchar("loan_id"),
+    kind: varchar("kind").notNull(),
+    title: varchar("title").notNull(),
+    body: text("body").notNull(),
+    read: varchar("read").notNull().default("false"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("IDX_notifications_user").on(table.userId),
+    index("IDX_notifications_read").on(table.read),
+  ],
+);
+
 export type Profile = typeof profilesTable.$inferSelect;
 export type Loan = typeof loansTable.$inferSelect;
 export type Funding = typeof fundingsTable.$inferSelect;
 export type Installment = typeof installmentsTable.$inferSelect;
 export type Activity = typeof activityTable.$inferSelect;
+export type Notification = typeof notificationsTable.$inferSelect;

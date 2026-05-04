@@ -695,3 +695,68 @@ export const GetLenderLeaderboardResponseItem = zod.object({
 export const GetLenderLeaderboardResponse = zod.array(
   GetLenderLeaderboardResponseItem,
 );
+
+/**
+ * @summary List notifications for the current user (newest first)
+ */
+export const ListNotificationsQueryParams = zod.object({
+  unreadOnly: zod.coerce.boolean().optional(),
+});
+
+export const ListNotificationsResponseItem = zod.object({
+  id: zod.string(),
+  kind: zod.enum([
+    "loan_funded",
+    "loan_fully_funded",
+    "repayment_received",
+    "loan_repaid",
+    "payment_due_soon",
+    "payment_overdue",
+  ]),
+  title: zod.string(),
+  body: zod.string(),
+  read: zod.boolean(),
+  createdAt: zod.coerce.date(),
+  loanId: zod.string().nullable(),
+});
+export const ListNotificationsResponse = zod.array(
+  ListNotificationsResponseItem,
+);
+
+/**
+ * @summary Count of unread notifications
+ */
+export const GetUnreadNotificationCountResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Mark every notification as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  updated: zod.number(),
+});
+
+/**
+ * @summary Mark a single notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  notificationId: zod.coerce.string(),
+});
+
+export const MarkNotificationReadResponse = zod.object({
+  id: zod.string(),
+  kind: zod.enum([
+    "loan_funded",
+    "loan_fully_funded",
+    "repayment_received",
+    "loan_repaid",
+    "payment_due_soon",
+    "payment_overdue",
+  ]),
+  title: zod.string(),
+  body: zod.string(),
+  read: zod.boolean(),
+  createdAt: zod.coerce.date(),
+  loanId: zod.string().nullable(),
+});

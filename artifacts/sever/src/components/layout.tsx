@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users } from "lucide-react";
+import { NotificationBell } from "@/components/notification-bell";
 
 interface LayoutProps {
   children: ReactNode;
@@ -55,6 +56,7 @@ export function Layout({ children }: LayoutProps) {
               <nav className="flex items-center space-x-2">
                 {isAuthenticated ? (
                   <>
+                    <NotificationBell />
                     <Link href="/profile" className="hidden md:flex items-center justify-center p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                       <UserCircle className="h-5 w-5" />
                     </Link>

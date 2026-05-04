@@ -5,6 +5,7 @@ import profileRouter from "./profile";
 import loansRouter from "./loans";
 import repaymentsRouter from "./repayments";
 import dashboardRouter from "./dashboard";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(profileRouter);
 router.use(loansRouter);
 router.use(repaymentsRouter);
 router.use(dashboardRouter);
+router.use(notificationsRouter);
 
 export default router;
