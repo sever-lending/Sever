@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -108,7 +109,7 @@ export default function PortfolioScreen() {
       >
         {overview && (
           <>
-            <View style={[styles.balanceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Animated.View entering={FadeInDown.duration(400).delay(60)} style={[styles.balanceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[styles.balanceLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
                 WALLET BALANCE
               </Text>
@@ -122,7 +123,7 @@ export default function PortfolioScreen() {
                 <StatCard label="Active Loans" value={String(overview.activeLending)} colors={colors} />
                 <StatCard label="Portfolio Yield" value={`${overview.portfolioYield.toFixed(2)}%`} accent colors={colors} />
               </View>
-            </View>
+            </Animated.View>
 
             {(lendings?.length ?? 0) > 0 && (
               <>

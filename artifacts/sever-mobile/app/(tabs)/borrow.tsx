@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
@@ -95,6 +96,7 @@ export default function BorrowScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 130 : 150 }]}
       >
+        <Animated.View entering={FadeInDown.duration(400).delay(60)}>
         <Field label="LOAN TITLE" colors={colors}>
           <StyledInput
             value={title}
@@ -103,6 +105,7 @@ export default function BorrowScreen() {
             colors={colors}
           />
         </Field>
+        </Animated.View>
 
         <View style={styles.twoCol}>
           <View style={{ flex: 1 }}>

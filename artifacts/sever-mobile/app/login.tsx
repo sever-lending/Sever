@@ -7,11 +7,18 @@ import {
   ActivityIndicator,
   Linking,
   ScrollView,
+  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+} from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,15 +29,18 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setToken } = useAuth();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setLoading(true);
+  const doAuthFlow = async (setL: (v: boolean) => void) => {
+    setL(true);
     setError(null);
     try {
       const redirectUri = `${BASE}/api/mobile-auth/callback`;
@@ -50,53 +60,70 @@ export default function LoginScreen() {
         } else {
           setError("Authentication failed. Please try again.");
         }
-      } else if (res.type === "cancel") {
-        setError(null);
       }
     } catch (e: any) {
       setError(e.message ?? "Login failed. Please try again.");
     } finally {
-      setLoading(false);
+      setL(false);
     }
   };
 
-  const handleEmailLogin = () => {
-    Linking.openURL(`${BASE}/login`);
-  };
-
-  const handleForgotPassword = () => {
+  const handleLogin = () => doAuthFlow(setLoading);
+  const handleEmailLogin = () => doAuthFlow(setEmailLoading);
+  const handleForgotPassword = () =>
     Linking.openURL("https://replit.com/account#account-email");
-  };
+
+  const gradientColors = isDark
+    ? (["#09090b", "#0d1f17", "#09090b"] as const)
+    : (["#f4f4f5", "#e8fdf6", "#f4f4f5"] as const);
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <TouchableOpacity
-        style={[styles.closeBtn, { top: insets.top + 16, backgroundColor: colors.card, borderColor: colors.border }]}
-        onPress={() => router.back()}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+    <LinearGradient colors={gradientColors} style={styles.root}>
+      <Animated.View
+        entering={FadeIn.duration(300)}
+        style={[
+          styles.closeBtn,
+          {
+            top: insets.top + 16,
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+        ]}
       >
-        <Feather name="x" size={18} color={colors.foreground} />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Feather name="x" size={18} color={colors.foreground} />
+        </TouchableOpacity>
+      </Animated.View>
 
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + 72, paddingBottom: insets.bottom + 32 },
+          { paddingTop: insets.top + 72, paddingBottom: insets.bottom + 40 },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hero}>
-          <View style={[styles.logoMark, { backgroundColor: colors.primary + "20" }]}>
-            <Text style={[styles.logoLetter, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>S</Text>
+        <Animated.View entering={FadeInDown.duration(500).delay(50)} style={styles.hero}>
+          <View style={[styles.logoMark, { backgroundColor: colors.primary + "25" }]}>
+            <Text style={[styles.logoLetter, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+              S
+            </Text>
           </View>
-          <Text style={[styles.wordmark, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>SEVER.</Text>
+          <Text style={[styles.wordmark, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+            SEVER.
+          </Text>
           <Text style={[styles.tagline, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             Your money. Your terms. No banks.
           </Text>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Animated.View
+          entering={FadeInDown.duration(500).delay(150)}
+          style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
           <Text style={[styles.cardTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
             Welcome back
           </Text>
@@ -105,18 +132,21 @@ export default function LoginScreen() {
           </Text>
 
           {error && (
-            <View style={[styles.errorBox, { backgroundColor: colors.destructive + "15", borderColor: colors.destructive + "40" }]}>
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              style={[styles.errorBox, { backgroundColor: colors.destructive + "15", borderColor: colors.destructive + "40" }]}
+            >
               <Feather name="alert-circle" size={14} color={colors.destructive} />
               <Text style={[styles.errorText, { color: colors.destructive, fontFamily: "Inter_400Regular" }]}>
                 {error}
               </Text>
-            </View>
+            </Animated.View>
           )}
 
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: colors.primary, opacity: loading ? 0.75 : 1 }]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={loading || emailLoading}
             activeOpacity={0.8}
           >
             {loading ? (
@@ -131,58 +161,85 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <View style={[styles.dividerRow, { borderColor: colors.border }]}>
+          <View style={styles.dividerRow}>
             <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-            <Text style={[styles.dividerText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>or</Text>
+            <Text style={[styles.dividerText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              or
+            </Text>
             <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           </View>
 
           <TouchableOpacity
-            style={[styles.secondaryBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+            style={[
+              styles.secondaryBtn,
+              { backgroundColor: colors.secondary, borderColor: colors.border, opacity: emailLoading ? 0.75 : 1 },
+            ]}
             onPress={handleEmailLogin}
+            disabled={loading || emailLoading}
             activeOpacity={0.8}
           >
-            <Feather name="mail" size={18} color={colors.foreground} />
-            <Text style={[styles.secondaryBtnText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-              Sign in with Email
-            </Text>
+            {emailLoading ? (
+              <ActivityIndicator color={colors.foreground} size="small" />
+            ) : (
+              <>
+                <Feather name="mail" size={18} color={colors.foreground} />
+                <Text style={[styles.secondaryBtnText, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                  Sign in with Email
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleForgotPassword} activeOpacity={0.7} style={styles.forgotBtn}>
+          <TouchableOpacity
+            onPress={handleForgotPassword}
+            activeOpacity={0.7}
+            style={styles.forgotBtn}
+          >
             <Text style={[styles.forgotText, { color: colors.primary, fontFamily: "Inter_500Medium" }]}>
-              Forgot password or need to recover your account?
+              Forgot password or need account recovery?
             </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.benefitsRow]}>
+        <Animated.View entering={FadeInDown.duration(500).delay(250)} style={styles.benefitsRow}>
           {[
             { icon: "shield" as const, label: "Secure OIDC" },
             { icon: "trending-up" as const, label: "Real Yields" },
             { icon: "zap" as const, label: "Instant Funding" },
           ].map((b) => (
-            <View key={b.label} style={[styles.benefit, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Feather name={b.icon} size={18} color={colors.primary} />
+            <View
+              key={b.label}
+              style={[styles.benefit, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <Feather name={b.icon} size={20} color={colors.primary} />
               <Text style={[styles.benefitText, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
                 {b.label}
               </Text>
             </View>
           ))}
-        </View>
+        </Animated.View>
 
-        <Text style={[styles.disclaimer, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-          By continuing, you agree to Sever's{" "}
-          <Text style={{ color: colors.primary }} onPress={() => Linking.openURL(`${BASE}/terms`)}>
-            Terms of Service
-          </Text>{" "}
-          and{" "}
-          <Text style={{ color: colors.primary }} onPress={() => Linking.openURL(`${BASE}/privacy`)}>
-            Privacy Policy
+        <Animated.View entering={FadeInUp.duration(500).delay(300)}>
+          <Text style={[styles.disclaimer, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            By continuing, you agree to Sever's{" "}
+            <Text
+              style={{ color: colors.primary }}
+              onPress={() => Linking.openURL(`${BASE}/terms`)}
+            >
+              Terms of Service
+            </Text>
+            {" "}and{" "}
+            <Text
+              style={{ color: colors.primary }}
+              onPress={() => Linking.openURL(`${BASE}/privacy`)}
+            >
+              Privacy Policy
+            </Text>
+            . P2P lending involves risk of capital loss. Not FDIC insured.
           </Text>
-          . P2P lending involves risk of capital loss.
-        </Text>
+        </Animated.View>
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -204,14 +261,14 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 24, gap: 20 },
   hero: { alignItems: "center", gap: 10, paddingTop: 8 },
   logoMark: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 72,
+    height: 72,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 4,
   },
-  logoLetter: { fontSize: 34, lineHeight: 40 },
+  logoLetter: { fontSize: 40, lineHeight: 46 },
   wordmark: { fontSize: 32, letterSpacing: 5 },
   tagline: { fontSize: 14, textAlign: "center", lineHeight: 20 },
   card: {
@@ -259,11 +316,12 @@ const styles = StyleSheet.create({
   benefit: {
     flex: 1,
     alignItems: "center",
-    gap: 6,
-    padding: 12,
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
     borderRadius: R - 2,
     borderWidth: 1,
   },
-  benefitText: { fontSize: 10, textAlign: "center" },
+  benefitText: { fontSize: 10, textAlign: "center", letterSpacing: 0.2 },
   disclaimer: { fontSize: 11, textAlign: "center", lineHeight: 17, paddingHorizontal: 4 },
 });

@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { useGetMyProfile } from "@workspace/api-client-react";
@@ -93,7 +94,7 @@ export default function ProfileScreen() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 100 : 110 }]}
       >
-        <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Animated.View entering={FadeInDown.duration(400).delay(60)} style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {user.profileImageUrl ? (
             <Image source={{ uri: user.profileImageUrl }} style={styles.avatar} />
           ) : (
@@ -115,9 +116,9 @@ export default function ProfileScreen() {
               {tier.toUpperCase()}
             </Text>
           </View>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.scoreCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Animated.View entering={FadeInDown.duration(400).delay(130)} style={[styles.scoreCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.scoreLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             TRUST SCORE
           </Text>
@@ -135,7 +136,7 @@ export default function ProfileScreen() {
           <Text style={[styles.scoreSubtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
             out of 1000
           </Text>
-        </View>
+        </Animated.View>
 
         <TouchableOpacity
           style={[styles.premiumBanner, { backgroundColor: colors.primary + "18", borderColor: colors.primary + "50" }]}

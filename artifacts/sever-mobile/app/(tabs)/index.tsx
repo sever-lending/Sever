@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { useListLoans, useGetPlatformStats } from "@workspace/api-client-react";
 
@@ -51,9 +52,10 @@ export default function MarketsScreen() {
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
-  const renderLoan = useCallback(({ item }: { item: any }) => {
+  const renderLoan = useCallback(({ item, index }: { item: any; index: number }) => {
     const pct = item.principal > 0 ? (item.fundedAmount / item.principal) * 100 : 0;
     return (
+      <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index * 70, 500))}>
       <TouchableOpacity
         style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
         onPress={() => router.push(`/loan/${item.id}`)}
@@ -113,6 +115,7 @@ export default function MarketsScreen() {
           </Text>
         </View>
       </TouchableOpacity>
+      </Animated.View>
     );
   }, [colors, router]);
 
