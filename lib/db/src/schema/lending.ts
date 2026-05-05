@@ -23,6 +23,8 @@ export const profilesTable = pgTable("profiles", {
   onTimePayments: integer("on_time_payments").notNull().default(0),
   latePayments: integer("late_payments").notNull().default(0),
   stripeConnectId: varchar("stripe_connect_id"),
+  kycSessionId: varchar("kyc_session_id"),
+  kycVerifiedAt: timestamp("kyc_verified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

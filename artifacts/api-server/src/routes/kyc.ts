@@ -30,6 +30,11 @@ router.post("/kyc/start-verification", async (req, res): Promise<void> => {
       return_url: `${baseUrl}/kyc?verification=complete`,
     });
 
+    await db
+      .update(profilesTable)
+      .set({ kycSessionId: session.id })
+      .where(eq(profilesTable.userId, req.user.id));
+
     res.json({ url: session.url, sessionId: session.id });
   } catch (err: any) {
     req.log.error({ err }, "Failed to create Stripe Identity session");
@@ -50,8 +55,24 @@ router.post("/kyc/check-status", async (req, res): Promise<void> => {
   }
 
   try {
+    const [profile] = await db
+      .select({ kycSessionId: profilesTable.kycSessionId, kycVerifiedAt: profilesTable.kycVerifiedAt })
+      .from(profilesTable)
+      .where(eq(profilesTable.userId, req.user.id));
+
+    if (!profile || profile.kycSessionId !== sessionId) {
+      res.status(403).json({ error: "Session does not belong to this account" });
+      return;
+    }
+
     const stripe = await getUncachableStripeClient();
     const session = await (stripe.identity as any).verificationSessions.retrieve(sessionId);
+
+    if (session.metadata?.userId !== req.user.id) {
+      req.log.warn({ sessionId, userId: req.user.id }, "KYC session metadata userId mismatch");
+      res.status(403).json({ error: "Session does not belong to this account" });
+      return;
+    }
 
     const status: "none" | "pending" | "approved" | "rejected" =
       session.status === "verified"
@@ -62,13 +83,16 @@ router.post("/kyc/check-status", async (req, res): Promise<void> => {
             ? "pending"
             : "none";
 
-    if (status === "approved") {
+    if (status === "approved" && !profile.kycVerifiedAt) {
       await db
         .update(profilesTable)
-        .set({ trustScore: 500 })
-        .where(
-          eq(profilesTable.userId, req.user.id)
-        );
+        .set({ trustScore: 500, kycVerifiedAt: new Date(), kycSessionId: null })
+        .where(eq(profilesTable.userId, req.user.id));
+    } else if (status === "rejected") {
+      await db
+        .update(profilesTable)
+        .set({ kycSessionId: null })
+        .where(eq(profilesTable.userId, req.user.id));
     }
 
     res.json({ status, sessionId });
