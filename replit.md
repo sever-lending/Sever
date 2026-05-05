@@ -51,3 +51,26 @@ A peer-to-peer lending platform ("Your money. Your terms. No banks.") with a dar
 
 ### Demo data
 - `pnpm --filter @workspace/scripts run seed-sever` — re-seeds 5 demo users (3 borrowers, 2 lenders) and 5 open loans, with two partially funded.
+
+### Admin Panel
+- Visit `/admin-login`, enter key `SVR-QVOF-CNYQ-9Z9L` → unlocks `/admin` dashboard.
+- Admin key verified via `POST /api/admin/verify`. Stored in env var `ADMIN_KEY`.
+
+### Legal Pages
+- `/legal/terms` — Terms of Service
+- `/legal/privacy` — Privacy Policy
+- `/legal/disclaimer` — Risk Disclaimer & Waiver
+- `/legal/contract` — Loan Agreement template
+
+### KYC
+- `/kyc` — 4-step identity verification UI (personal info → ID upload → selfie → review). Needs real provider integration (e.g. Persona, Stripe Identity) for production.
+
+### Stripe Payments
+- Connected via Replit Stripe integration (sandbox mode in dev, live in production).
+- Client helper: `artifacts/api-server/src/lib/stripeClient.ts`
+- `POST /api/stripe/checkout-session` — creates a Stripe Checkout session for wallet deposits; returns `{url}`.
+- `POST /api/stripe/confirm-deposit` — verifies session, idempotently credits wallet.
+- Wallet page redirects users to Stripe Checkout; on return, auto-confirms and credits balance.
+
+### Loan Agreement Modal
+- `LoanAgreementModal` component — shown before a lender funds a loan. Requires 3 checkboxes (risk, terms, KYC) before allowing the transaction to proceed.

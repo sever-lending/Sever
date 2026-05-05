@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   useGetMyProfile, 
-  useDepositFunds, 
   useWithdrawFunds,
   getGetMyProfileQueryKey
 } from "@workspace/api-client-react";
@@ -13,7 +12,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet as WalletIcon, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { Wallet as WalletIcon, ArrowDownToLine, ArrowUpFromLine, CheckCircle2, ExternalLink } from "lucide-react";
+
+const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+
+async function createCheckoutSession(amount: number): Promise<{ url: string }> {
+  const res = await fetch(`${BASE}/api/stripe/checkout-session`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? "Failed to create checkout session");
+  }
+  return res.json();
+}
+
+async function confirmDeposit(sessionId: string): Promise<{ newBalance: number; depositAmount: number }> {
+  const res = await fetch(`${BASE}/api/stripe/confirm-deposit`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? "Failed to confirm deposit");
+  }
+  return res.json();
+}
 
 export function Wallet() {
   const { data: profile, isLoading } = useGetMyProfile();
@@ -22,19 +51,48 @@ export function Wallet() {
 
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+  const [depositPending, setDepositPending] = useState(false);
 
-  const depositMutation = useDepositFunds({
-    mutation: {
-      onSuccess: () => {
-        toast({ title: "Deposit successful", description: "Funds added to your wallet." });
-        setDepositAmount("");
-        queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
-      },
-      onError: (err: any) => {
-        toast({ title: "Deposit failed", description: err.error || "An error occurred.", variant: "destructive" });
-      }
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const cancelled = params.get("deposit");
+
+    if (sessionId) {
+      window.history.replaceState({}, "", window.location.pathname);
+      confirmDeposit(sessionId)
+        .then(({ depositAmount: amt, newBalance }) => {
+          toast({
+            title: "Deposit successful!",
+            description: `$${amt.toFixed(2)} added to your wallet. New balance: ${formatMoney(newBalance)}.`,
+          });
+          queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+        })
+        .catch((err) => {
+          if (err.message !== "Session already processed") {
+            toast({ title: "Deposit issue", description: err.message, variant: "destructive" });
+          }
+        });
     }
-  });
+
+    if (cancelled === "cancelled") {
+      window.history.replaceState({}, "", window.location.pathname);
+      toast({ title: "Deposit cancelled", description: "Your payment was not completed.", variant: "destructive" });
+    }
+  }, []);
+
+  const handleDeposit = async () => {
+    const amt = Number(depositAmount);
+    if (!amt || amt < 10 || amt > 100000) return;
+    setDepositPending(true);
+    try {
+      const { url } = await createCheckoutSession(amt);
+      window.location.href = url;
+    } catch (err: any) {
+      toast({ title: "Deposit failed", description: err.message, variant: "destructive" });
+      setDepositPending(false);
+    }
+  };
 
   const withdrawMutation = useWithdrawFunds({
     mutation: {
@@ -82,14 +140,16 @@ export function Wallet() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Deposit Form */}
+        {/* Deposit via Stripe */}
         <Card className="bg-card border-border rounded-none shadow-none">
           <CardHeader className="border-b border-border">
             <CardTitle className="font-mono uppercase tracking-widest text-base flex items-center gap-2">
               <ArrowDownToLine className="h-4 w-4 text-primary" />
               Deposit Funds
             </CardTitle>
-            <CardDescription className="font-mono text-xs uppercase">Add funds to lend.</CardDescription>
+            <CardDescription className="font-mono text-xs uppercase flex items-center gap-1">
+              Secured by Stripe <ExternalLink className="h-3 w-3" />
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="space-y-2">
@@ -108,12 +168,16 @@ export function Wallet() {
                 />
               </div>
             </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono bg-muted/30 p-3">
+              <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+              <span>You'll be redirected to Stripe's secure checkout page.</span>
+            </div>
             <Button 
               className="w-full rounded-none font-bold tracking-tight h-12"
-              onClick={() => depositMutation.mutate({ data: { amount: Number(depositAmount) } })}
-              disabled={!depositAmount || Number(depositAmount) < 10 || Number(depositAmount) > 100000 || depositMutation.isPending}
+              onClick={handleDeposit}
+              disabled={!depositAmount || Number(depositAmount) < 10 || Number(depositAmount) > 100000 || depositPending}
             >
-              {depositMutation.isPending ? "PROCESSING..." : "DEPOSIT"}
+              {depositPending ? "REDIRECTING TO STRIPE..." : "DEPOSIT WITH STRIPE"}
             </Button>
           </CardContent>
         </Card>
