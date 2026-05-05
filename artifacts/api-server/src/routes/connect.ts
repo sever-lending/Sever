@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, profilesTable } from "@workspace/db";
 import { getUncachableStripeClient } from "../lib/stripeClient";
 import { ensureProfile, buildMyProfile } from "./profile";
@@ -86,32 +86,69 @@ router.post("/connect/payout", async (req, res): Promise<void> => {
   }
 
   try {
-    const profile = await ensureProfile(req.user.id);
-    if (!profile.stripeConnectId) {
+    await ensureProfile(req.user.id);
+
+    let stripeConnectId: string | null = null;
+    let insufficientBalance = false;
+
+    await db.transaction(async (tx) => {
+      const [locked] = await tx
+        .select()
+        .from(profilesTable)
+        .where(eq(profilesTable.userId, req.user.id))
+        .for("update");
+
+      if (!locked) {
+        throw new Error("Profile not found");
+      }
+
+      if (!locked.stripeConnectId) {
+        return;
+      }
+
+      const balance = num(locked.walletBalance);
+      if (amount > balance) {
+        insufficientBalance = true;
+        return;
+      }
+
+      stripeConnectId = locked.stripeConnectId;
+      const newBalance = round2(balance - amount);
+      await tx
+        .update(profilesTable)
+        .set({ walletBalance: newBalance.toFixed(2) })
+        .where(eq(profilesTable.userId, req.user.id));
+    });
+
+    if (stripeConnectId === null && !insufficientBalance) {
       res.status(400).json({ error: "Bank account not connected. Please set up your bank account first." });
       return;
     }
 
-    const balance = num(profile.walletBalance);
-    if (amount > balance) {
+    if (insufficientBalance) {
       res.status(400).json({ error: "Insufficient balance" });
       return;
     }
 
-    const stripe = await getUncachableStripeClient();
-
-    await stripe.transfers.create({
-      amount: Math.round(amount * 100),
-      currency: "usd",
-      destination: profile.stripeConnectId,
-      metadata: { userId: req.user.id },
-    });
-
-    const newBalance = round2(balance - amount);
-    await db
-      .update(profilesTable)
-      .set({ walletBalance: newBalance.toFixed(2) })
-      .where(eq(profilesTable.userId, req.user.id));
+    try {
+      const stripe = await getUncachableStripeClient();
+      await stripe.transfers.create({
+        amount: Math.round(amount * 100),
+        currency: "usd",
+        destination: stripeConnectId!,
+        metadata: { userId: req.user.id },
+      });
+    } catch (stripeErr: any) {
+      req.log.error({ err: stripeErr }, "Stripe transfer failed after balance deduction — refunding");
+      await db
+        .update(profilesTable)
+        .set({
+          walletBalance: sql`wallet_balance + ${amount.toFixed(2)}::numeric`,
+        })
+        .where(eq(profilesTable.userId, req.user.id));
+      res.status(502).json({ error: "Payout failed. Your balance has been restored. Please try again." });
+      return;
+    }
 
     const out = await buildMyProfile(req.user.id);
     res.json({ success: true, newBalance: out.walletBalance });

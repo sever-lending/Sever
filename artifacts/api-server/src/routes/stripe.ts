@@ -1,13 +1,11 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, profilesTable } from "@workspace/db";
+import { db, profilesTable, processedSessionsTable } from "@workspace/db";
 import { getUncachableStripeClient, getStripePublishableKey } from "../lib/stripeClient";
 import { ensureProfile, buildMyProfile } from "./profile";
 import { num, round2 } from "../lib/lending";
 
 const router: IRouter = Router();
-
-const USED_SESSIONS = new Set<string>();
 
 router.get("/stripe/publishable-key", async (req, res): Promise<void> => {
   if (!req.isAuthenticated()) {
@@ -86,11 +84,6 @@ router.post("/stripe/confirm-deposit", async (req, res): Promise<void> => {
     return;
   }
 
-  if (USED_SESSIONS.has(sessionId)) {
-    res.status(409).json({ error: "Session already processed" });
-    return;
-  }
-
   try {
     const stripe = await getUncachableStripeClient();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -111,14 +104,47 @@ router.post("/stripe/confirm-deposit", async (req, res): Promise<void> => {
       return;
     }
 
-    USED_SESSIONS.add(sessionId);
+    await ensureProfile(req.user.id);
 
-    const profile = await ensureProfile(req.user.id);
-    const newBalance = round2(num(profile.walletBalance) + depositAmount);
-    await db
-      .update(profilesTable)
-      .set({ walletBalance: newBalance.toFixed(2) })
-      .where(eq(profilesTable.userId, req.user.id));
+    let credited = false;
+    await db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(processedSessionsTable)
+        .values({
+          sessionId,
+          userId: req.user.id,
+          depositAmount: depositAmount.toFixed(2),
+        })
+        .onConflictDoNothing()
+        .returning();
+
+      if (inserted.length === 0) {
+        return;
+      }
+
+      const [profile] = await tx
+        .select()
+        .from(profilesTable)
+        .where(eq(profilesTable.userId, req.user.id))
+        .for("update");
+
+      if (!profile) {
+        throw new Error("Profile not found");
+      }
+
+      const newBalance = round2(num(profile.walletBalance) + depositAmount);
+      await tx
+        .update(profilesTable)
+        .set({ walletBalance: newBalance.toFixed(2) })
+        .where(eq(profilesTable.userId, req.user.id));
+
+      credited = true;
+    });
+
+    if (!credited) {
+      res.status(409).json({ error: "Session already processed" });
+      return;
+    }
 
     const out = await buildMyProfile(req.user.id);
     res.json({ success: true, newBalance: out.walletBalance, depositAmount });

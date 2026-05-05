@@ -11,8 +11,6 @@ import {
   GetMyProfileResponse,
   UpdateMyProfileBody,
   UpdateMyProfileResponse,
-  DepositFundsBody,
-  DepositFundsResponse,
   WithdrawFundsBody,
   WithdrawFundsResponse,
 } from "@workspace/api-zod";
@@ -41,7 +39,7 @@ async function ensureProfile(userId: string) {
     .values({
       userId,
       displayName,
-      walletBalance: "1000",
+      walletBalance: "0",
     })
     .returning();
   return created;
@@ -117,26 +115,6 @@ router.patch("/profile/me", async (req, res): Promise<void> => {
     .where(eq(profilesTable.userId, req.user.id));
   const out = await buildMyProfile(req.user.id);
   res.json(UpdateMyProfileResponse.parse(out));
-});
-
-router.post("/profile/deposit", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
-  const parsed = DepositFundsBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const profile = await ensureProfile(req.user.id);
-  const newBalance = round2(num(profile.walletBalance) + parsed.data.amount);
-  await db
-    .update(profilesTable)
-    .set({ walletBalance: newBalance.toFixed(2) })
-    .where(eq(profilesTable.userId, req.user.id));
-  const out = await buildMyProfile(req.user.id);
-  res.json(DepositFundsResponse.parse(out));
 });
 
 router.post("/profile/withdraw", async (req, res): Promise<void> => {

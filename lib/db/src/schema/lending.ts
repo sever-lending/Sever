@@ -182,9 +182,21 @@ export const notificationsTable = pgTable(
   ],
 );
 
+export const processedSessionsTable = pgTable("processed_sessions", {
+  sessionId: varchar("session_id").primaryKey(),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  depositAmount: numeric("deposit_amount", { precision: 14, scale: 2 }).notNull(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type Profile = typeof profilesTable.$inferSelect;
 export type Loan = typeof loansTable.$inferSelect;
 export type Funding = typeof fundingsTable.$inferSelect;
 export type Installment = typeof installmentsTable.$inferSelect;
 export type Activity = typeof activityTable.$inferSelect;
 export type Notification = typeof notificationsTable.$inferSelect;
+export type ProcessedSession = typeof processedSessionsTable.$inferSelect;
