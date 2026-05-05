@@ -15,8 +15,55 @@ import {
   Clock,
   Star,
   ChevronDown,
+  Smartphone,
 } from "lucide-react";
 import { motion } from "framer-motion";
+
+const APP_STORE_URL = "https://apps.apple.com/app/sever-lending/id0000000000";
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.severlending.sever";
+
+function AppleLogo() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" fill="currentColor" aria-hidden>
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11" />
+    </svg>
+  );
+}
+
+function PlayLogo() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" fill="currentColor" aria-hidden>
+      <path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5c.6.36.6 1.24 0 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z" />
+    </svg>
+  );
+}
+
+function StoreBadge({
+  href,
+  icon,
+  line1,
+  line2,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  line1: string;
+  line2: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-foreground/5 border border-foreground/10 hover:bg-primary/10 hover:border-primary/40 transition-all duration-200 min-w-[160px]"
+    >
+      {icon}
+      <div className="text-left leading-tight">
+        <p className="text-[10px] text-muted-foreground group-hover:text-foreground/60 transition-colors">{line1}</p>
+        <p className="text-sm font-bold tracking-tight">{line2}</p>
+      </div>
+    </a>
+  );
+}
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -115,6 +162,11 @@ export function Landing() {
                 </Button>
               </>
             )}
+          </motion.div>
+
+          <motion.div {...fadeIn(0.44)} className="flex flex-wrap items-center justify-center gap-2.5 mb-5">
+            <StoreBadge href={APP_STORE_URL} icon={<AppleLogo />} line1="Download on the" line2="App Store" />
+            <StoreBadge href={PLAY_STORE_URL} icon={<PlayLogo />} line1="Get it on" line2="Google Play" />
           </motion.div>
 
           <motion.div {...fadeIn(0.48)} className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
@@ -385,6 +437,67 @@ export function Landing() {
                     </div>
                   </motion.div>
                 ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── DOWNLOAD THE APP ── */}
+      <section className="w-full py-24 px-4 border-t border-border/40">
+        <div className="container mx-auto max-w-5xl">
+          <div className="glass-card relative overflow-hidden p-10 md:p-14 flex flex-col md:flex-row items-center gap-10">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+            <div className="orb" style={{ width: 300, height: 300, top: -80, right: -60, background: "radial-gradient(circle, rgba(45,212,160,0.12) 0%, transparent 70%)", position: "absolute", borderRadius: "50%", filter: "blur(40px)", pointerEvents: "none" }} />
+
+            <div className="relative z-10 flex-1 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-5">
+                <Smartphone className="h-3.5 w-3.5" />
+                Mobile App
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter mb-3">
+                Sever in your pocket.
+              </h2>
+              <p className="text-muted-foreground text-base mb-7 max-w-md">
+                Track your portfolio, fund loans, and manage repayments from anywhere. Available on iOS and Android.
+              </p>
+              <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                <StoreBadge href={APP_STORE_URL} icon={<AppleLogo />} line1="Download on the" line2="App Store" />
+                <StoreBadge href={PLAY_STORE_URL} icon={<PlayLogo />} line1="Get it on" line2="Google Play" />
+              </div>
+            </div>
+
+            <div className="relative z-10 shrink-0 hidden md:flex flex-col items-center gap-2">
+              <div className="w-[180px] h-[320px] rounded-[32px] border-2 border-border/60 bg-card/80 overflow-hidden shadow-2xl shadow-primary/10 flex flex-col">
+                <div className="h-6 flex items-center justify-center">
+                  <div className="w-16 h-1.5 rounded-full bg-border/60 mt-2" />
+                </div>
+                <div className="flex-1 px-3 py-2 flex flex-col gap-2">
+                  <div className="text-center py-2">
+                    <p className="text-[10px] font-bold tracking-widest text-foreground">SEVER<span className="text-primary">.</span></p>
+                    <p className="text-[8px] text-muted-foreground">P2P Lending</p>
+                  </div>
+                  {[
+                    { label: "Emergency dental work", rate: "12.5%", funded: 40 },
+                    { label: "Used Toyota for delivery", rate: "10%", funded: 67 },
+                    { label: "HVAC replacement", rate: "8.75%", funded: 20 },
+                  ].map((l, i) => (
+                    <div key={i} className="rounded-lg border border-border/60 bg-background/60 p-2">
+                      <div className="flex justify-between items-start mb-1.5">
+                        <p className="text-[9px] leading-tight text-foreground/80 flex-1 pr-1">{l.label}</p>
+                        <p className="text-[11px] font-bold text-primary shrink-0">{l.rate}</p>
+                      </div>
+                      <div className="h-1 rounded-full bg-border overflow-hidden">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${l.funded}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="h-10 border-t border-border/40 flex items-center justify-around px-4">
+                  {["📊", "💼", "➕", "👛", "👤"].map((e, i) => (
+                    <span key={i} className="text-[12px]">{e}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
