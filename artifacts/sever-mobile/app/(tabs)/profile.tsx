@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Share,
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -57,12 +58,24 @@ function LoginGate({ colors, topPad }: { colors: any; topPad: number }) {
   );
 }
 
+const APP_URL = `https://${process.env.EXPO_PUBLIC_DOMAIN ?? "sever.replit.app"}`;
+
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
   const { data: profile, isLoading } = useGetMyProfile();
+
+  const shareApp = async () => {
+    try {
+      await Share.share({
+        title: "Sever — P2P Lending",
+        message: `Lend money. Earn real yields. No banks.\n\nJoin me on Sever: ${APP_URL}`,
+        url: APP_URL,
+      });
+    } catch {}
+  };
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -160,6 +173,25 @@ export default function ProfileScreen() {
             </Text>
             <Text style={[styles.premiumSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
               Lower fees, higher limits, advanced analytics — $9.99/mo
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={16} color={colors.primary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.shareBtn, { backgroundColor: colors.primary + "18", borderColor: colors.primary + "40" }]}
+          onPress={shareApp}
+          activeOpacity={0.75}
+        >
+          <View style={[styles.shareIcon, { backgroundColor: colors.primary }]}>
+            <Feather name="share-2" size={14} color={colors.primaryForeground} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.shareBtnTitle, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+              Share with Friends
+            </Text>
+            <Text style={[styles.shareBtnSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              Invite your network to Sever
             </Text>
           </View>
           <Feather name="chevron-right" size={16} color={colors.primary} />
@@ -280,6 +312,17 @@ const styles = StyleSheet.create({
   premiumIcon: { width: 30, height: 30, borderRadius: 15, justifyContent: "center", alignItems: "center" },
   premiumTitle: { fontSize: 14 },
   premiumSub: { fontSize: 11, marginTop: 2, lineHeight: 16 },
+  shareBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: R,
+    borderWidth: 1,
+  },
+  shareIcon: { width: 30, height: 30, borderRadius: 15, justifyContent: "center", alignItems: "center" },
+  shareBtnTitle: { fontSize: 14 },
+  shareBtnSub: { fontSize: 11, marginTop: 2 },
   menuCard: { borderRadius: R, borderWidth: 1, overflow: "hidden" },
   menuItem: { flexDirection: "row", alignItems: "center", gap: 12, padding: 15 },
   menuIconWrap: { width: 30, height: 30, borderRadius: 8, justifyContent: "center", alignItems: "center" },

@@ -15,10 +15,19 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.sever.app"
+      "bundleIdentifier": "com.sever.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Sever uses your camera for identity verification.",
+        "NSPhotoLibraryUsageDescription": "Sever uses your photo library for identity verification."
+      }
     },
     "android": {
-      "package": "com.sever.app"
+      "package": "com.sever.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#050505"
+      },
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
