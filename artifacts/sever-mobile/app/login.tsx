@@ -9,6 +9,7 @@ import {
   ScrollView,
   useColorScheme,
 } from "react-native";
+import * as ExpoLinking from "expo-linking";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
@@ -43,9 +44,12 @@ export default function LoginScreen() {
     setL(true);
     setError(null);
     try {
-      const redirectUri = `${BASE}/api/mobile-auth/callback`;
+      // createURL produces exp://… in Expo Go and sever-mobile://… in
+      // production — the OS can intercept these without Associated Domains.
+      const redirectUri = ExpoLinking.createURL("mobile-auth/callback");
+      const returnTo = `/api/mobile-auth/token?redirectUri=${encodeURIComponent(redirectUri)}`;
       const res = await WebBrowser.openAuthSessionAsync(
-        `${BASE}/api/login?returnTo=${encodeURIComponent("/api/mobile-auth/token")}`,
+        `${BASE}/api/login?returnTo=${encodeURIComponent(returnTo)}`,
         redirectUri,
         { showInRecents: true }
       );

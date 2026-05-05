@@ -243,7 +243,19 @@ router.get("/mobile-auth/token", async (req: Request, res: Response) => {
   }
   const code = generateMobileAuthCode(session);
   const origin = getOrigin(req);
-  res.redirect(`${origin}/api/mobile-auth/callback?code=${code}`);
+
+  // Use the deep-link redirect URI supplied by the mobile client (exp:// or
+  // sever-mobile://) so that ASWebAuthenticationSession / Chrome Custom Tabs
+  // can intercept the redirect without requiring Associated Domains.
+  const rawRedirectUri = req.query.redirectUri;
+  const ALLOWED_SCHEMES = ["exp://", "sever-mobile://", "sever://"];
+  const redirectUri =
+    typeof rawRedirectUri === "string" &&
+    ALLOWED_SCHEMES.some((s) => rawRedirectUri.startsWith(s))
+      ? rawRedirectUri
+      : `${origin}/api/mobile-auth/callback`;
+
+  res.redirect(`${redirectUri}?code=${code}`);
 });
 
 router.post("/mobile-auth/exchange", async (req: Request, res: Response) => {
