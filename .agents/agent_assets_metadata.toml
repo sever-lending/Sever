@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "EG0M3WBYUHinAvrLZWgLK"
+uri = "file://artifacts/sever-mobile/assets/images/icon.png"
+type = "image"
+title = "sever app icon dark teal"

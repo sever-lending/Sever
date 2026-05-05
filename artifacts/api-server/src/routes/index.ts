@@ -8,6 +8,8 @@ import dashboardRouter from "./dashboard";
 import notificationsRouter from "./notifications";
 import adminRouter from "./admin";
 import stripeRouter from "./stripe";
+import kycRouter from "./kyc";
+import connectRouter from "./connect";
 
 const router: IRouter = Router();
 
@@ -20,5 +22,7 @@ router.use(dashboardRouter);
 router.use(notificationsRouter);
 router.use(adminRouter);
 router.use(stripeRouter);
+router.use(kycRouter);
+router.use(connectRouter);
 
 export default router;

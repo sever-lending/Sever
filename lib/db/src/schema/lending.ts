@@ -22,6 +22,7 @@ export const profilesTable = pgTable("profiles", {
   trustScore: integer("trust_score").notNull().default(500),
   onTimePayments: integer("on_time_payments").notNull().default(0),
   latePayments: integer("late_payments").notNull().default(0),
+  stripeConnectId: varchar("stripe_connect_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
