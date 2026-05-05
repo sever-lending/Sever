@@ -8,6 +8,7 @@ import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
+import { AdBanner } from "@/components/AdBanner";
 
 function NativeTabLayout() {
   return (
@@ -46,6 +47,7 @@ function ClassicTabLayout() {
   const isAndroid = Platform.OS === "android";
 
   return (
+    <View style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -136,6 +138,8 @@ function ClassicTabLayout() {
         }}
       />
     </Tabs>
+    <AdBanner />
+    </View>
   );
 }
 

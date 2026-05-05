@@ -105,7 +105,7 @@ export default function BorrowScreen() {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 130 : 150 }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 180 : 150 }]}
       >
         <Animated.View entering={FadeInDown.duration(400).delay(60)}>
         <Field label="LOAN TITLE" colors={colors}>

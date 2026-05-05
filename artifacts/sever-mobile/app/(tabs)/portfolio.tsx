@@ -112,7 +112,7 @@ export default function PortfolioScreen() {
       )}
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 100 : 110 }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 150 : 110 }]}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
       >
         {overview && (

@@ -113,7 +113,7 @@ export default function ProfileScreen() {
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 100 : 110 }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 150 : 110 }]}
       >
         <Animated.View entering={FadeInDown.duration(400).delay(60)} style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {user.profileImageUrl ? (

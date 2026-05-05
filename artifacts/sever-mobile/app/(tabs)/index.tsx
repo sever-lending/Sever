@@ -154,7 +154,7 @@ export default function MarketsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderLoan}
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 100 : 110 }]}
+          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 150 : 110 }]}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.empty}>
