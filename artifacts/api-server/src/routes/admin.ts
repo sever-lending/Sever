@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import {
   platformRevenueTable,
@@ -10,27 +10,32 @@ import { desc, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-const ADMIN_KEY = process.env.ADMIN_KEY ?? "";
-
-function checkAdminKey(req: any): boolean {
-  const header = req.headers["x-admin-key"];
-  const body = req.body?.key;
-  return !!(ADMIN_KEY && (header === ADMIN_KEY || body === ADMIN_KEY));
+function isAdmin(req: Request): boolean {
+  const adminUserId = process.env.ADMIN_USER_ID;
+  if (!adminUserId) return false;
+  return req.isAuthenticated() && req.user.id === adminUserId;
 }
 
 router.post("/admin/verify", (req, res): void => {
-  if (checkAdminKey(req)) {
+  if (isAdmin(req)) {
     res.json({ ok: true });
+  } else if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Authentication required" });
   } else {
-    res.status(401).json({ error: "Invalid admin key" });
+    res.status(403).json({ error: "Forbidden" });
   }
 });
 
-router.get("/admin/revenue", async (req, res): Promise<void> => {
-  if (!checkAdminKey(req)) {
-    res.status(401).json({ error: "Unauthorized" });
+router.get("/admin/revenue", async (req: Request, res: Response): Promise<void> => {
+  if (!isAdmin(req)) {
+    if (!req.isAuthenticated()) {
+      res.status(401).json({ error: "Authentication required" });
+    } else {
+      res.status(403).json({ error: "Forbidden" });
+    }
     return;
   }
+
   const [totals] = await db
     .select({
       total: sql<string>`coalesce(sum(${platformRevenueTable.amount}), 0)::text`,

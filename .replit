@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "python-3.11"]
 
 [deployment]
 router = "application"
@@ -43,7 +43,7 @@ externalPort = 3001
 [userenv]
 
 [userenv.shared]
-ADMIN_KEY = "SVR-QVOF-CNYQ-9Z9L"
+ADMIN_USER_ID = "tw/FMLq5PAQ+CUS2Pm3zhb25xPAXJxBFFOkpOBNs9PBVOvbiHZGEyfuaYp+ULXjcSGGp/gQjRfxEJSJYcR/Dqw=="
 
 [nix]
 channel = "stable-25_05"

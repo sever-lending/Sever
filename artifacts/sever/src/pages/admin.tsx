@@ -61,12 +61,11 @@ export function Admin() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const key = sessionStorage.getItem("sever_admin_key") ?? "";
     fetch(`${import.meta.env.BASE_URL}api/admin/revenue`, {
-      headers: { "x-admin-key": key },
+      credentials: "include",
     })
       .then((r) => {
-        if (r.status === 401) {
+        if (r.status === 401 || r.status === 403) {
           window.location.href = `${import.meta.env.BASE_URL}admin-login`;
           return null;
         }

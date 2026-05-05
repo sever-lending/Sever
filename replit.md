@@ -53,8 +53,8 @@ A peer-to-peer lending platform ("Your money. Your terms. No banks.") with a dar
 - `pnpm --filter @workspace/scripts run seed-sever` — re-seeds 5 demo users (3 borrowers, 2 lenders) and 5 open loans, with two partially funded.
 
 ### Admin Panel
-- Visit `/admin-login`, enter key `SVR-QVOF-CNYQ-9Z9L` → unlocks `/admin` dashboard.
-- Admin key verified via `POST /api/admin/verify`. Stored in env var `ADMIN_KEY`.
+- Visit `/admin-login` and sign in with the owner Replit account → unlocks `/admin` dashboard.
+- Admin access requires an authenticated session with a user ID matching the `ADMIN_USER_ID` environment variable.
 
 ### Legal Pages
 - `/legal/terms` — Terms of Service
