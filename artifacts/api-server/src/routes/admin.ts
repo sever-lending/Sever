@@ -10,7 +10,27 @@ import { desc, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-router.get("/admin/revenue", async (_req, res): Promise<void> => {
+const ADMIN_KEY = process.env.ADMIN_KEY ?? "";
+
+function checkAdminKey(req: any): boolean {
+  const header = req.headers["x-admin-key"];
+  const body = req.body?.key;
+  return !!(ADMIN_KEY && (header === ADMIN_KEY || body === ADMIN_KEY));
+}
+
+router.post("/admin/verify", (req, res): void => {
+  if (checkAdminKey(req)) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ error: "Invalid admin key" });
+  }
+});
+
+router.get("/admin/revenue", async (req, res): Promise<void> => {
+  if (!checkAdminKey(req)) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const [totals] = await db
     .select({
       total: sql<string>`coalesce(sum(${platformRevenueTable.amount}), 0)::text`,

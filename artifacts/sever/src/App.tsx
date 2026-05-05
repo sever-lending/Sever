@@ -19,6 +19,12 @@ import { Wallet } from "@/pages/wallet";
 import { Profile } from "@/pages/profile";
 import { Lenders } from "@/pages/lenders";
 import { Admin } from "@/pages/admin";
+import { AdminLogin } from "@/pages/admin-login";
+import { KYC } from "@/pages/kyc";
+import { Terms } from "@/pages/legal/terms";
+import { Privacy } from "@/pages/legal/privacy";
+import { Disclaimer } from "@/pages/legal/disclaimer";
+import { LoanContract } from "@/pages/legal/contract";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -53,7 +59,17 @@ function Router() {
         </Route>
 
         <Route path="/admin" component={Admin} />
-        
+        <Route path="/admin-login" component={AdminLogin} />
+
+        <Route path="/kyc">
+          <ProtectedRoute><KYC /></ProtectedRoute>
+        </Route>
+
+        <Route path="/legal/terms" component={Terms} />
+        <Route path="/legal/privacy" component={Privacy} />
+        <Route path="/legal/disclaimer" component={Disclaimer} />
+        <Route path="/legal/contract" component={LoanContract} />
+
         <Route component={NotFound} />
       </Switch>
     </Layout>

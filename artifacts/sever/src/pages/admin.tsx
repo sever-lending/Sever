@@ -61,12 +61,19 @@ export function Admin() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}api/admin/revenue`)
+    const key = sessionStorage.getItem("sever_admin_key") ?? "";
+    fetch(`${import.meta.env.BASE_URL}api/admin/revenue`, {
+      headers: { "x-admin-key": key },
+    })
       .then((r) => {
+        if (r.status === 401) {
+          window.location.href = `${import.meta.env.BASE_URL}admin-login`;
+          return null;
+        }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then(setData)
+      .then((d) => { if (d) setData(d); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);

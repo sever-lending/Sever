@@ -23,12 +23,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ShieldCheck, Calendar, Info, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { LoanAgreementModal } from "@/components/loan-agreement-modal";
 
 export function LoanDetail({ id }: { id: string }) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [fundAmount, setFundAmount] = useState<string>("");
+  const [showAgreement, setShowAgreement] = useState(false);
 
   const { data: loan, isLoading } = useGetLoan(id, { 
     query: { enabled: !!id, queryKey: getGetLoanQueryKey(id) } 
@@ -352,11 +354,28 @@ export function LoanDetail({ id }: { id: string }) {
                       </div>
                       <Button 
                         className="w-full rounded-none font-bold tracking-tight h-12"
-                        onClick={() => fundMutation.mutate({ id, data: { amount: Number(fundAmount) } })}
+                        onClick={() => setShowAgreement(true)}
                         disabled={!fundAmount || Number(fundAmount) < 25 || Number(fundAmount) > remainingToFund || fundMutation.isPending}
                       >
-                        FUND NOW
+                        REVIEW &amp; FUND
                       </Button>
+                      {loan && (
+                        <LoanAgreementModal
+                          open={showAgreement}
+                          role="lender"
+                          loanTitle={loan.title}
+                          principal={Number(fundAmount) || 0}
+                          interestRate={loan.interestRate}
+                          termMonths={loan.termMonths}
+                          monthlyPayment={loan.monthlyPayment}
+                          originationFee={loan.originationFee}
+                          onAccept={() => {
+                            setShowAgreement(false);
+                            fundMutation.mutate({ id, data: { amount: Number(fundAmount) } });
+                          }}
+                          onCancel={() => setShowAgreement(false)}
+                        />
+                      )}
                     </div>
                   ) : (
                     <div className="p-4 bg-muted/50 border border-border text-center text-muted-foreground font-mono uppercase text-sm">
