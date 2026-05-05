@@ -2,11 +2,10 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users, ShieldCheck } from "lucide-react";
+import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
 
 const LOGO_URL = `${import.meta.env.BASE_URL}sever-logo.png`;
-const isAdmin = () => sessionStorage.getItem("sever_admin") === "1";
 
 interface LayoutProps {
   children: ReactNode;
@@ -61,12 +60,6 @@ export function Layout({ children }: LayoutProps) {
                 {isAuthenticated ? (
                   <>
                     <NotificationBell />
-                    {isAdmin() && (
-                      <Link href="/admin" className="hidden md:flex items-center gap-1.5 text-xs font-semibold text-primary border border-primary/30 rounded-md px-2.5 py-1.5 hover:bg-primary/10 transition-colors">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        Admin
-                      </Link>
-                    )}
                     <Link href="/profile" className="hidden md:flex items-center justify-center p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                       <UserCircle className="h-5 w-5" />
                     </Link>
@@ -76,8 +69,8 @@ export function Layout({ children }: LayoutProps) {
                     </Button>
                   </>
                 ) : (
-                  <Button size="sm" onClick={login} className="font-bold tracking-tight">
-                    LOG IN
+                  <Button size="sm" onClick={login} className="font-bold tracking-tight px-5">
+                    GET STARTED
                   </Button>
                 )}
               </nav>
@@ -100,7 +93,6 @@ export function Layout({ children }: LayoutProps) {
             <Link href="/legal/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link href="/legal/disclaimer" className="hover:text-foreground transition-colors">Disclaimer</Link>
             <Link href="/legal/contract" className="hover:text-foreground transition-colors">Loan Agreement</Link>
-            <Link href="/admin" className="hover:text-foreground transition-colors">Admin</Link>
           </nav>
         </div>
       </footer>

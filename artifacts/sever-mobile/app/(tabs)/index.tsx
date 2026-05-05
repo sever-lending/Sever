@@ -185,7 +185,7 @@ function HeaderContent({ stats, colors }: { stats: any; colors: any }) {
           </View>
           <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.miniStat}>
-            <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{stats.openLoans}</Text>
+            <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{stats.activeLoans ?? 0}</Text>
             <Text style={[styles.miniLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Open</Text>
           </View>
         </View>

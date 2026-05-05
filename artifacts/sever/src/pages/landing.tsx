@@ -117,6 +117,12 @@ export function Landing() {
             )}
           </motion.div>
 
+          <motion.div {...fadeIn(0.48)} className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+            <span className="inline-block h-px w-8 bg-border/60" />
+            <span>Free to join · No credit card required</span>
+            <span className="inline-block h-px w-8 bg-border/60" />
+          </motion.div>
+
           <motion.div {...fadeIn(0.55)} className="flex items-center gap-3 text-sm text-muted-foreground">
             <div className="flex -space-x-2">
               {["P", "M", "D", "A"].map((l, i) => (
