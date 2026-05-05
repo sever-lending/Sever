@@ -93,7 +93,7 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-2">
             <img src={LOGO_URL} alt="Sever" className="h-5 w-auto opacity-60" />
             <span className="font-semibold">SEVER.</span>
-            <span>© {new Date().getFullYear()} Sever Financial, LLC. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} Sever Lending, LLC. All rights reserved.</span>
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/legal/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
