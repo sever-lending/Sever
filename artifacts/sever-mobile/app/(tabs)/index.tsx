@@ -12,7 +12,8 @@ import {
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { useListLoans, useGetPlatformStats } from "@workspace/api-client-react";
 
@@ -50,96 +51,98 @@ export default function MarketsScreen() {
   const { data: loans, isLoading, refetch, isRefetching } = useListLoans({ status: "open" } as any);
   const { data: stats } = useGetPlatformStats();
 
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const topPad = Platform.OS === "web" ? 0 : insets.top;
 
   const renderLoan = useCallback(({ item, index }: { item: any; index: number }) => {
     const pct = item.principal > 0 ? (item.fundedAmount / item.principal) * 100 : 0;
     return (
       <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index * 70, 500))}>
-      <TouchableOpacity
-        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-        onPress={() => router.push(`/loan/${item.id}`)}
-        activeOpacity={0.75}
-      >
-        <View style={styles.cardTop}>
-          <View style={styles.cardLeft}>
-            <View style={styles.borrowerRow}>
-              <TierDot tier={item.borrowerTier} colors={colors} />
-              <Text style={[styles.borrowerName, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
-                {item.borrowerName}
-              </Text>
-              <Text style={[styles.score, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                · {item.borrowerTrustScore}
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => router.push(`/loan/${item.id}`)}
+          activeOpacity={0.75}
+        >
+          <View style={styles.cardTop}>
+            <View style={styles.cardLeft}>
+              <View style={styles.borrowerRow}>
+                <TierDot tier={item.borrowerTier} colors={colors} />
+                <Text style={[styles.borrowerName, { color: colors.mutedForeground, fontFamily: "Inter_500Medium" }]}>
+                  {item.borrowerName}
+                </Text>
+                <Text style={[styles.score, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                  · {item.borrowerTrustScore}
+                </Text>
+              </View>
+              <Text style={[styles.loanTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]} numberOfLines={1}>
+                {item.title}
               </Text>
             </View>
-            <Text style={[styles.loanTitle, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]} numberOfLines={1}>
-              {item.title}
-            </Text>
+            <View style={styles.cardRight}>
+              <Text style={[styles.rate, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
+                {item.interestRate}%
+              </Text>
+              <Text style={[styles.rateLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                APR
+              </Text>
+            </View>
           </View>
-          <View style={styles.cardRight}>
-            <Text style={[styles.rate, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>
-              {item.interestRate}%
-            </Text>
-            <Text style={[styles.rateLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              APR
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.cardMid}>
-          <View style={styles.stat}>
-            <Text style={[styles.statVal, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-              {fmt(item.principal)}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Principal
-            </Text>
+          <View style={styles.cardMid}>
+            <View style={styles.stat}>
+              <Text style={[styles.statVal, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                {fmt(item.principal)}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Principal
+              </Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={[styles.statVal, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
+                {item.termMonths}mo
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Term
+              </Text>
+            </View>
+            <PurposeBadge purpose={item.purpose} colors={colors} />
           </View>
-          <View style={styles.stat}>
-            <Text style={[styles.statVal, { color: colors.foreground, fontFamily: "Inter_600SemiBold" }]}>
-              {item.termMonths}mo
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-              Term
-            </Text>
-          </View>
-          <PurposeBadge purpose={item.purpose} colors={colors} />
-        </View>
 
-        <View style={styles.progressRow}>
-          <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
-            <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${Math.min(pct, 100)}%` as any }]} />
+          <View style={styles.progressRow}>
+            <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+              <LinearGradient
+                colors={[colors.primary + "cc", colors.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.progressFill, { width: `${Math.min(pct, 100)}%` as any }]}
+              />
+            </View>
+            <Text style={[styles.progressLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+              {pct.toFixed(0)}% funded
+            </Text>
           </View>
-          <Text style={[styles.progressLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            {pct.toFixed(0)}% funded
-          </Text>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
       </Animated.View>
     );
   }, [colors, router]);
 
+  const isWeb = Platform.OS === "web";
+  const gradientColors = ["#0d1f17", colors.background] as const;
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 14, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <View>
-          <Text style={[styles.wordmark, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>SEVER.</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Peer-to-peer lending</Text>
+      {isWeb ? (
+        <View style={[styles.headerWeb, { paddingTop: topPad + 14, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+          <HeaderContent stats={stats} colors={colors} />
         </View>
-        {stats && (
-          <View style={styles.statsRow}>
-            <View style={styles.miniStat}>
-              <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{fmt(stats.totalVolume)}</Text>
-              <Text style={[styles.miniLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Volume</Text>
-            </View>
-            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.miniStat}>
-              <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{stats.openLoans}</Text>
-              <Text style={[styles.miniLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Open</Text>
-            </View>
-          </View>
-        )}
-      </View>
+      ) : (
+        <LinearGradient
+          colors={gradientColors}
+          style={[styles.headerNative, { paddingTop: topPad + 14 }]}
+        >
+          <HeaderContent stats={stats} colors={colors} />
+          <View style={[styles.headerBorder, { backgroundColor: colors.border }]} />
+        </LinearGradient>
+      )}
 
       {isLoading ? (
         <View style={styles.centered}>
@@ -165,11 +168,37 @@ export default function MarketsScreen() {
   );
 }
 
+function HeaderContent({ stats, colors }: { stats: any; colors: any }) {
+  return (
+    <View style={styles.headerInner}>
+      <View>
+        <Text style={[styles.wordmark, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>
+          SEVER<Text style={{ color: colors.primary }}>.</Text>
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Peer-to-peer lending</Text>
+      </View>
+      {stats && (
+        <View style={styles.statsRow}>
+          <View style={styles.miniStat}>
+            <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{fmt(stats.totalVolume)}</Text>
+            <Text style={[styles.miniLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Volume</Text>
+          </View>
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+          <View style={styles.miniStat}>
+            <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{stats.openLoans}</Text>
+            <Text style={[styles.miniLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Open</Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
 const R = 14;
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
+  headerWeb: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
@@ -177,6 +206,16 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  headerNative: {
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+  },
+  headerInner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  headerBorder: { height: StyleSheet.hairlineWidth, marginTop: 14 },
   wordmark: { fontSize: 22, letterSpacing: 3 },
   subtitle: { fontSize: 11, marginTop: 2 },
   statsRow: { flexDirection: "row", alignItems: "center", gap: 12 },
@@ -190,6 +229,11 @@ const styles = StyleSheet.create({
     borderRadius: R,
     borderWidth: 1,
     gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   cardLeft: { flex: 1, gap: 5 },

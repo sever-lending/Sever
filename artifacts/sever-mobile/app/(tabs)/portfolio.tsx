@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -99,9 +100,16 @@ export default function PortfolioScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 14, borderBottomColor: colors.border }]}>
-        <Text style={[styles.heading, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Portfolio</Text>
-      </View>
+      {Platform.OS === "web" ? (
+        <View style={[styles.header, { paddingTop: topPad + 14, borderBottomColor: colors.border }]}>
+          <Text style={[styles.heading, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Portfolio</Text>
+        </View>
+      ) : (
+        <LinearGradient colors={["#0d1f17", colors.background]} style={[styles.headerGrad, { paddingTop: topPad + 14 }]}>
+          <Text style={[styles.heading, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Portfolio</Text>
+          <View style={[styles.headerBorder, { backgroundColor: colors.border }]} />
+        </LinearGradient>
+      )}
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 100 : 110 }]}
@@ -219,6 +227,8 @@ const R = 14;
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  headerGrad: { paddingHorizontal: 20, paddingBottom: 14 },
+  headerBorder: { height: StyleSheet.hairlineWidth, marginTop: 14 },
   heading: { fontSize: 24, letterSpacing: -0.3 },
   scroll: { padding: 16, gap: 10 },
   balanceCard: { padding: 22, borderRadius: R, borderWidth: 1, marginBottom: 4 },
