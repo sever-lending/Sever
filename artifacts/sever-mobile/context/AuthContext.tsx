@@ -24,7 +24,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   setToken: (token: string | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -32,7 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   token: null,
   isLoading: true,
   setToken: () => {},
-  logout: () => {},
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -72,7 +72,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => setToken(null);
+  const logout = async () => {
+    const stored = await AsyncStorage.getItem("sever_token");
+    if (stored) {
+      try {
+        const domain = process.env.EXPO_PUBLIC_DOMAIN ?? "";
+        await fetch(`https://${domain}/api/mobile-auth/logout`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${stored}` },
+        });
+      } catch {
+      }
+    }
+    setToken(null);
+  };
 
   return (
     <AuthContext.Provider value={{ user, token, isLoading, setToken, logout }}>

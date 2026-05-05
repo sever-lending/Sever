@@ -52,11 +52,25 @@ export default function LoginScreen() {
 
       if (res.type === "success" && res.url) {
         const url = new URL(res.url);
-        const token = url.searchParams.get("token");
-        if (token) {
-          setToken(token);
-          await queryClient.invalidateQueries();
-          router.replace("/(tabs)");
+        const code = url.searchParams.get("code");
+        if (code) {
+          const exchangeRes = await fetch(`${BASE}/api/mobile-auth/exchange`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          if (!exchangeRes.ok) {
+            setError("Authentication failed. Please try again.");
+            return;
+          }
+          const { token } = await exchangeRes.json();
+          if (token) {
+            setToken(token);
+            await queryClient.invalidateQueries();
+            router.replace("/(tabs)");
+          } else {
+            setError("Authentication failed. Please try again.");
+          }
         } else {
           setError("Authentication failed. Please try again.");
         }

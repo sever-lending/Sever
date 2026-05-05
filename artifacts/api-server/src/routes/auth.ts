@@ -1,4 +1,5 @@
 import * as oidc from "openid-client";
+import crypto from "crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
 import {
   GetCurrentAuthUserResponse,
@@ -12,6 +13,7 @@ import {
   getOidcConfig,
   getSessionId,
   createSession,
+  getSession,
   deleteSession,
   SESSION_COOKIE,
   SESSION_TTL,
@@ -20,6 +22,32 @@ import {
 } from "../lib/auth";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
+const MOBILE_AUTH_CODE_TTL = 2 * 60 * 1000;
+
+interface MobileAuthCode {
+  sessionData: SessionData;
+  expiresAt: number;
+}
+
+const mobileAuthCodes = new Map<string, MobileAuthCode>();
+
+function generateMobileAuthCode(sessionData: SessionData): string {
+  const code = crypto.randomBytes(32).toString("hex");
+  mobileAuthCodes.set(code, {
+    sessionData,
+    expiresAt: Date.now() + MOBILE_AUTH_CODE_TTL,
+  });
+  return code;
+}
+
+function redeemMobileAuthCode(code: string): SessionData | null {
+  const entry = mobileAuthCodes.get(code);
+  mobileAuthCodes.delete(code);
+  if (!entry || entry.expiresAt < Date.now()) {
+    return null;
+  }
+  return entry.sessionData;
+}
 
 const router: IRouter = Router();
 
@@ -213,8 +241,26 @@ router.get("/mobile-auth/token", async (req: Request, res: Response) => {
     res.redirect("/api/login");
     return;
   }
+  const code = generateMobileAuthCode(session);
   const origin = getOrigin(req);
-  res.redirect(`${origin}/api/mobile-auth/callback?token=${sid}`);
+  res.redirect(`${origin}/api/mobile-auth/callback?code=${code}`);
+});
+
+router.post("/mobile-auth/exchange", async (req: Request, res: Response) => {
+  const { code } = req.body ?? {};
+  if (typeof code !== "string" || !code) {
+    res.status(400).json({ error: "Missing or invalid code" });
+    return;
+  }
+
+  const sessionData = redeemMobileAuthCode(code);
+  if (!sessionData) {
+    res.status(401).json({ error: "Invalid or expired authorization code" });
+    return;
+  }
+
+  const mobileSid = await createSession(sessionData);
+  res.json(ExchangeMobileAuthorizationCodeResponse.parse({ token: mobileSid }));
 });
 
 router.post(
