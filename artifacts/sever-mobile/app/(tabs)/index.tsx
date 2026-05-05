@@ -36,9 +36,9 @@ function TierDot({ tier, colors }: { tier: string; colors: any }) {
     gold: "#FFD700",
     silver: "#C0C0C0",
     bronze: "#CD7F32",
-    unverified: "#666",
+    unverified: "#555",
   };
-  return <View style={[styles.tierDot, { backgroundColor: colorMap[tier] ?? "#666" }]} />;
+  return <View style={[styles.tierDot, { backgroundColor: colorMap[tier] ?? "#555" }]} />;
 }
 
 export default function MarketsScreen() {
@@ -48,6 +48,8 @@ export default function MarketsScreen() {
 
   const { data: loans, isLoading, refetch, isRefetching } = useListLoans({ status: "open" } as any);
   const { data: stats } = useGetPlatformStats();
+
+  const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const renderLoan = useCallback(({ item }: { item: any }) => {
     const pct = item.principal > 0 ? (item.fundedAmount / item.principal) * 100 : 0;
@@ -114,11 +116,9 @@ export default function MarketsScreen() {
     );
   }, [colors, router]);
 
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
-
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: topPad + 14, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <View>
           <Text style={[styles.wordmark, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>SEVER.</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Peer-to-peer lending</Text>
@@ -129,6 +129,7 @@ export default function MarketsScreen() {
               <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{fmt(stats.totalVolume)}</Text>
               <Text style={[styles.miniLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Volume</Text>
             </View>
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
             <View style={styles.miniStat}>
               <Text style={[styles.miniVal, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{stats.openLoans}</Text>
               <Text style={[styles.miniLabel, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>Open</Text>
@@ -147,12 +148,12 @@ export default function MarketsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderLoan}
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 84 : 100 }]}
+          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 100 : 110 }]}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Feather name="inbox" size={40} color={colors.mutedForeground} />
-              <Text style={[styles.emptyText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>No open loans</Text>
+              <Feather name="inbox" size={44} color={colors.mutedForeground} />
+              <Text style={[styles.emptyText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>No open loans yet</Text>
             </View>
           }
         />
@@ -161,6 +162,8 @@ export default function MarketsScreen() {
   );
 }
 
+const R = 14;
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
@@ -168,47 +171,48 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  wordmark: { fontSize: 22, letterSpacing: 2 },
+  wordmark: { fontSize: 22, letterSpacing: 3 },
   subtitle: { fontSize: 11, marginTop: 2 },
-  statsRow: { flexDirection: "row", gap: 16 },
+  statsRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  statDivider: { width: 1, height: 24 },
   miniStat: { alignItems: "flex-end" },
-  miniVal: { fontSize: 16 },
+  miniVal: { fontSize: 17 },
   miniLabel: { fontSize: 10, marginTop: 1 },
-  list: { padding: 16, gap: 12 },
+  list: { padding: 16, gap: 10 },
   card: {
     padding: 16,
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: R,
+    borderWidth: 1,
     gap: 12,
   },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  cardLeft: { flex: 1, gap: 4 },
+  cardLeft: { flex: 1, gap: 5 },
   cardRight: { alignItems: "flex-end" },
-  borrowerRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  tierDot: { width: 6, height: 6, borderRadius: 3 },
+  borrowerRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  tierDot: { width: 7, height: 7, borderRadius: 4 },
   borrowerName: { fontSize: 12 },
   score: { fontSize: 12 },
-  loanTitle: { fontSize: 15 },
-  rate: { fontSize: 22 },
+  loanTitle: { fontSize: 15, lineHeight: 20 },
+  rate: { fontSize: 24 },
   rateLabel: { fontSize: 10 },
   cardMid: { flexDirection: "row", alignItems: "center", gap: 16 },
-  stat: { gap: 1 },
+  stat: { gap: 2 },
   statVal: { fontSize: 14 },
   statLabel: { fontSize: 10 },
   badge: {
     borderWidth: 1,
-    borderRadius: 2,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     marginLeft: "auto",
   },
   badgeText: { fontSize: 10 },
-  progressRow: { gap: 4 },
-  progressTrack: { height: 3, borderRadius: 2, overflow: "hidden" },
-  progressFill: { height: 3, borderRadius: 2 },
+  progressRow: { gap: 5 },
+  progressTrack: { height: 5, borderRadius: 4, overflow: "hidden" },
+  progressFill: { height: 5, borderRadius: 4 },
   progressLabel: { fontSize: 10 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12, paddingTop: 80 },

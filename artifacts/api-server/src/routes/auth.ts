@@ -202,6 +202,21 @@ router.get("/logout", async (req: Request, res: Response) => {
   res.redirect(endSessionUrl.href);
 });
 
+router.get("/mobile-auth/token", async (req: Request, res: Response) => {
+  const sid = req.cookies?.[SESSION_COOKIE];
+  if (!sid) {
+    res.redirect("/api/login");
+    return;
+  }
+  const session = await getSession(sid);
+  if (!session?.user?.id) {
+    res.redirect("/api/login");
+    return;
+  }
+  const origin = getOrigin(req);
+  res.redirect(`${origin}/api/mobile-auth/callback?token=${sid}`);
+});
+
 router.post(
   "/mobile-auth/token-exchange",
   async (req: Request, res: Response) => {

@@ -81,17 +81,19 @@ export default function BorrowScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 12, borderBottomColor: colors.border }]}>
-        <Text style={[styles.heading, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Borrow</Text>
-        <Text style={[styles.subheading, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-          Post a loan request
-        </Text>
+      <View style={[styles.header, { paddingTop: topPad + 14, borderBottomColor: colors.border }]}>
+        <View>
+          <Text style={[styles.heading, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Borrow</Text>
+          <Text style={[styles.subheading, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+            Post a loan request to the marketplace
+          </Text>
+        </View>
       </View>
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 120 : 140 }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: Platform.OS === "web" ? 130 : 150 }]}
       >
         <Field label="LOAN TITLE" colors={colors}>
           <StyledInput
@@ -102,7 +104,7 @@ export default function BorrowScreen() {
           />
         </Field>
 
-        <View style={styles.row}>
+        <View style={styles.twoCol}>
           <View style={{ flex: 1 }}>
             <Field label="AMOUNT ($)" colors={colors}>
               <StyledInput
@@ -172,7 +174,7 @@ export default function BorrowScreen() {
           <TextInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Explain how you'll use these funds..."
+            placeholder="Explain how you'll use these funds and your repayment plan..."
             placeholderTextColor={colors.mutedForeground}
             multiline
             numberOfLines={4}
@@ -188,10 +190,15 @@ export default function BorrowScreen() {
           />
         </Field>
 
-        <View style={[styles.feeNote, { backgroundColor: colors.primary + "12", borderColor: colors.primary + "30" }]}>
-          <Feather name="info" size={13} color={colors.primary} />
+        <View style={[styles.feeNote, { backgroundColor: colors.accent, borderColor: colors.primary + "30" }]}>
+          <Feather name="info" size={14} color={colors.primary} />
           <Text style={[styles.feeText, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-            Sever charges a 1.5% origination fee deducted from the disbursement upon full funding.
+            Sever charges a{" "}
+            <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold" }}>1.5% origination fee</Text>
+            {" "}deducted from the disbursement upon full funding.{" "}
+            <Text style={{ color: colors.primary }} onPress={() => router.push("/premium")}>
+              Premium members pay only 1%.
+            </Text>
           </Text>
         </View>
 
@@ -200,21 +207,26 @@ export default function BorrowScreen() {
             styles.submitBtn,
             {
               backgroundColor: canSubmit ? colors.primary : colors.muted,
-              opacity: mutation.isPending ? 0.7 : 1,
+              opacity: mutation.isPending ? 0.75 : 1,
             },
           ]}
           onPress={handleSubmit}
           disabled={!canSubmit || mutation.isPending}
           activeOpacity={0.8}
         >
-          <Text style={[styles.submitText, { color: canSubmit ? colors.primaryForeground : colors.mutedForeground, fontFamily: "Inter_700Bold" }]}>
-            {mutation.isPending ? "POSTING..." : user ? "POST LOAN REQUEST" : "LOG IN TO BORROW"}
+          <Text style={[styles.submitText, {
+            color: canSubmit ? colors.primaryForeground : colors.mutedForeground,
+            fontFamily: "Inter_700Bold",
+          }]}>
+            {mutation.isPending ? "POSTING..." : user ? "POST LOAN REQUEST" : "SIGN IN TO BORROW"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
+
+const R = 14;
 
 function Field({ label, children, colors }: { label: string; children: React.ReactNode; colors: any }) {
   return (
@@ -230,59 +242,63 @@ function StyledInput({ colors, ...props }: any) {
     <TextInput
       {...props}
       placeholderTextColor={colors.mutedForeground}
-      style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground, fontFamily: "Inter_400Regular" }]}
+      style={[styles.input, {
+        backgroundColor: colors.card,
+        borderColor: colors.border,
+        color: colors.foreground,
+        fontFamily: "Inter_400Regular",
+      }]}
     />
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  heading: { fontSize: 22, letterSpacing: 0.5 },
-  subheading: { fontSize: 12, marginTop: 2 },
-  scroll: { padding: 20, gap: 16 },
-  row: { flexDirection: "row", gap: 12 },
-  field: { gap: 6 },
-  fieldLabel: { fontSize: 10, letterSpacing: 1 },
+  header: { paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  heading: { fontSize: 24, letterSpacing: -0.3 },
+  subheading: { fontSize: 12, marginTop: 3, lineHeight: 17 },
+  scroll: { padding: 20, gap: 18 },
+  twoCol: { flexDirection: "row", gap: 12 },
+  field: { gap: 7 },
+  fieldLabel: { fontSize: 10, letterSpacing: 1.2 },
   input: {
-    height: 44,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    height: 48,
+    paddingHorizontal: 14,
+    borderRadius: R,
+    borderWidth: 1,
     fontSize: 14,
   },
   textarea: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: R,
+    borderWidth: 1,
     fontSize: 14,
-    minHeight: 96,
+    minHeight: 100,
     textAlignVertical: "top",
   },
   purposeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   purposeChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: R,
+    borderWidth: 1,
   },
   purposeText: { fontSize: 12 },
   feeNote: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
-    padding: 12,
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    gap: 10,
+    padding: 14,
+    borderRadius: R,
+    borderWidth: 1,
   },
-  feeText: { fontSize: 12, flex: 1, lineHeight: 17 },
+  feeText: { fontSize: 13, flex: 1, lineHeight: 19 },
   submitBtn: {
-    height: 50,
+    height: 56,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 4,
-    marginTop: 4,
+    borderRadius: R,
   },
-  submitText: { fontSize: 13, letterSpacing: 1 },
+  submitText: { fontSize: 14, letterSpacing: 0.5 },
 });
