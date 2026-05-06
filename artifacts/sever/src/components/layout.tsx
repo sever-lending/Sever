@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users } from "lucide-react";
+import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users, BookOpen } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
 
 const LOGO_URL = `${import.meta.env.BASE_URL}sever-logo.png`;
@@ -27,6 +27,7 @@ export function Layout({ children }: LayoutProps) {
     : [
         { href: "/", label: "Home", icon: Home },
         { href: "/lenders", label: "Lenders", icon: Users },
+        { href: "/tutorial", label: "Guide", icon: BookOpen },
       ];
 
   return (

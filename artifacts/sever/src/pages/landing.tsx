@@ -171,7 +171,9 @@ export function Landing() {
 
           <motion.div {...fadeIn(0.48)} className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
             <span className="inline-block h-px w-8 bg-border/60" />
-            <span>Free to join · No credit card required</span>
+            <span>Free to join · No credit card required ·{" "}
+              <Link href="/tutorial" className="text-primary hover:underline underline-offset-2">How it works</Link>
+            </span>
             <span className="inline-block h-px w-8 bg-border/60" />
           </motion.div>
 

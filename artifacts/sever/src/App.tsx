@@ -25,6 +25,7 @@ import { Terms } from "@/pages/legal/terms";
 import { Privacy } from "@/pages/legal/privacy";
 import { Disclaimer } from "@/pages/legal/disclaimer";
 import { LoanContract } from "@/pages/legal/contract";
+import { Tutorial } from "@/pages/tutorial";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/lenders" component={Lenders} />
+        <Route path="/tutorial" component={Tutorial} />
         
         <Route path="/dashboard">
           <ProtectedRoute><Dashboard /></ProtectedRoute>
