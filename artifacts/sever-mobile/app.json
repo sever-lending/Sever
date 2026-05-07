@@ -45,6 +45,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9689029a-099a-439e-9879-17d8bebe65c5"
+      }
+    },
+    "owner": "sever-lendings-organization"
   }
 }
