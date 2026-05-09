@@ -9,7 +9,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "YOUR_REPLIT_APP_DOMAIN_HERE"
+        "EXPO_PUBLIC_DOMAIN": "2adebecf-0ba4-4c66-a85f-2f440a02cad2-00-2v1ni1z7g2t7a.janeway.replit.dev"
       }
     },
     "production": {
@@ -18,7 +18,7 @@
       },
       "ios": {},
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "YOUR_REPLIT_APP_DOMAIN_HERE"
+        "EXPO_PUBLIC_DOMAIN": "YOUR_PUBLISHED_DOMAIN.replit.app"
       }
     }
   },
