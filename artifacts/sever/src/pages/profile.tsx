@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { 
   useGetMyProfile, 
   useUpdateMyProfile,
+  useChangeUsername,
   getGetMyProfileQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, UserCircle, Save } from "lucide-react";
+import { ShieldCheck, UserCircle, Save, AtSign } from "lucide-react";
 
 export function Profile() {
   const { data: profile, isLoading } = useGetMyProfile();
@@ -23,11 +24,14 @@ export function Profile() {
 
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.displayName);
       setBio(profile.bio || "");
+      setUsernameInput(profile.username ?? "");
     }
   }, [profile]);
 
@@ -43,9 +47,32 @@ export function Profile() {
     }
   });
 
+  const usernameMutation = useChangeUsername({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Username updated!", description: `You are now @${usernameInput} on Sever.` });
+        queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+        setUsernameError(null);
+      },
+      onError: (err: any) => {
+        setUsernameError(err?.error ?? "Failed to set username.");
+      }
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateMutation.mutate({ data: { displayName, bio } });
+  };
+
+  const handleUsernameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUsernameError(null);
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(usernameInput)) {
+      setUsernameError("3-30 characters, letters, numbers, underscores only.");
+      return;
+    }
+    usernameMutation.mutate({ data: { username: usernameInput } });
   };
 
   if (isLoading) {
@@ -75,6 +102,46 @@ export function Profile() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
+          <Card className="bg-card border-border rounded-none shadow-none">
+            <form onSubmit={handleUsernameSubmit}>
+              <CardHeader className="border-b border-border">
+                <CardTitle className="font-mono uppercase tracking-widest text-base flex items-center gap-2">
+                  <AtSign className="h-4 w-4 text-primary" />
+                  Username
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Your username keeps you anonymous across loans and chats. Shown as <span className="text-primary font-mono">@username</span>.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-xs uppercase font-mono text-muted-foreground">Username</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-mono text-sm">@</span>
+                    <Input
+                      id="username"
+                      className="pl-7 font-mono rounded-none"
+                      value={usernameInput}
+                      onChange={(e) => { setUsernameInput(e.target.value); setUsernameError(null); }}
+                      maxLength={30}
+                      placeholder="your_handle"
+                    />
+                  </div>
+                  {usernameError && <p className="text-xs text-destructive font-mono">{usernameError}</p>}
+                  <p className="text-xs text-muted-foreground">3–30 characters · letters, numbers, underscores</p>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto rounded-none font-bold tracking-tight"
+                  disabled={usernameMutation.isPending || !usernameInput}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {usernameMutation.isPending ? "SAVING..." : "SAVE USERNAME"}
+                </Button>
+              </CardContent>
+            </form>
+          </Card>
+
           <Card className="bg-card border-border rounded-none shadow-none">
             <form onSubmit={handleSubmit}>
               <CardHeader className="border-b border-border">

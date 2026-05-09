@@ -99,6 +99,7 @@ export const LogoutMobileSessionResponse = zod.object({
  */
 export const GetMyProfileResponse = zod.object({
   id: zod.string(),
+  username: zod.string().nullable(),
   displayName: zod.string(),
   bio: zod.string().nullable(),
   profileImageUrl: zod.string().nullable(),
@@ -127,6 +128,7 @@ export const UpdateMyProfileBody = zod.object({
 
 export const UpdateMyProfileResponse = zod.object({
   id: zod.string(),
+  username: zod.string().nullable(),
   displayName: zod.string(),
   bio: zod.string().nullable(),
   profileImageUrl: zod.string().nullable(),
@@ -156,6 +158,7 @@ export const DepositFundsBody = zod.object({
 
 export const DepositFundsResponse = zod.object({
   id: zod.string(),
+  username: zod.string().nullable(),
   displayName: zod.string(),
   bio: zod.string().nullable(),
   profileImageUrl: zod.string().nullable(),
@@ -180,6 +183,7 @@ export const WithdrawFundsBody = zod.object({
 
 export const WithdrawFundsResponse = zod.object({
   id: zod.string(),
+  username: zod.string().nullable(),
   displayName: zod.string(),
   bio: zod.string().nullable(),
   profileImageUrl: zod.string().nullable(),
@@ -759,4 +763,111 @@ export const MarkNotificationReadResponse = zod.object({
   read: zod.boolean(),
   createdAt: zod.coerce.date(),
   loanId: zod.string().nullable(),
+});
+
+/**
+ * @summary Set or update the user's unique username
+ */
+export const ChangeUsernameBody = zod.object({
+  username: zod.string(),
+});
+
+export const ChangeUsernameResponse = zod.object({
+  id: zod.string(),
+  username: zod.string().nullable(),
+  displayName: zod.string(),
+  bio: zod.string().nullable(),
+  profileImageUrl: zod.string().nullable(),
+  walletBalance: zod.number().describe("Available balance in USD"),
+  trustScore: zod.number().describe("0-1000 community trust score"),
+  tier: zod.enum(["unverified", "bronze", "silver", "gold", "platinum"]),
+  loansFunded: zod.number(),
+  loansBorrowed: zod.number(),
+  totalLent: zod.number(),
+  totalBorrowed: zod.number(),
+  onTimePayments: zod.number(),
+  latePayments: zod.number(),
+});
+
+/**
+ * @summary Get the chat thread for a loan project
+ */
+export const ListLoanMessagesParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const ListLoanMessagesResponseItem = zod.object({
+  id: zod.string(),
+  loanId: zod.string(),
+  senderId: zod.string(),
+  senderUsername: zod.string(),
+  content: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListLoanMessagesResponse = zod.array(ListLoanMessagesResponseItem);
+
+/**
+ * @summary Post a message to a loan project chat
+ */
+export const PostLoanMessageParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const postLoanMessageBodyContentMax = 1000;
+
+export const PostLoanMessageBody = zod.object({
+  content: zod.string().min(1).max(postLoanMessageBodyContentMax),
+});
+
+/**
+ * @summary List all DM conversations for the current user
+ */
+export const ListConversationsResponseItem = zod.object({
+  userId: zod.string(),
+  username: zod.string(),
+  lastMessage: zod.string(),
+  lastMessageAt: zod.coerce.date(),
+  unreadCount: zod.number(),
+});
+export const ListConversationsResponse = zod.array(
+  ListConversationsResponseItem,
+);
+
+/**
+ * @summary Count of unread DMs
+ */
+export const GetDmUnreadCountResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Get the DM thread with a specific user
+ */
+export const GetConversationParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const GetConversationResponseItem = zod.object({
+  id: zod.string(),
+  fromUserId: zod.string(),
+  toUserId: zod.string(),
+  fromUsername: zod.string(),
+  toUsername: zod.string(),
+  content: zod.string(),
+  read: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+export const GetConversationResponse = zod.array(GetConversationResponseItem);
+
+/**
+ * @summary Send a direct message to a user
+ */
+export const SendDirectMessageParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const sendDirectMessageBodyContentMax = 1000;
+
+export const SendDirectMessageBody = zod.object({
+  content: zod.string().min(1).max(sendDirectMessageBodyContentMax),
 });

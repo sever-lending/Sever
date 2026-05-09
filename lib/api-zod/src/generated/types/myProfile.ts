@@ -9,6 +9,8 @@ import type { MyProfileTier } from "./myProfileTier";
 
 export interface MyProfile {
   id: string;
+  /** @nullable */
+  username: string | null;
   displayName: string;
   /** @nullable */
   bio: string | null;

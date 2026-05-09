@@ -1,12 +1,15 @@
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useGetMyProfile, getGetMyProfileQueryKey } from "@workspace/api-client-react";
+import { useState } from "react";
 
 // Layout & UI
 import { Layout } from "@/components/layout";
 import { ProtectedRoute } from "@/components/protected-route";
+import { UsernameSetupModal } from "@/components/username-setup-modal";
 
 // Pages
 import { Landing } from "@/pages/landing";
@@ -26,9 +29,18 @@ import { Privacy } from "@/pages/legal/privacy";
 import { Disclaimer } from "@/pages/legal/disclaimer";
 import { LoanContract } from "@/pages/legal/contract";
 import { Tutorial } from "@/pages/tutorial";
+import { Messages } from "@/pages/messages";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
+
+function UsernamePrompt() {
+  const { user } = useAuth();
+  const { data: profile } = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), enabled: !!user } });
+  const [dismissed, setDismissed] = useState(false);
+  const showModal = !!user && !!profile && profile.username === null && !dismissed;
+  return <UsernameSetupModal open={showModal} onClose={() => setDismissed(true)} />;
+}
 
 function Router() {
   return (
@@ -59,6 +71,12 @@ function Router() {
         <Route path="/profile">
           <ProtectedRoute><Profile /></ProtectedRoute>
         </Route>
+        <Route path="/messages">
+          <ProtectedRoute><Messages /></ProtectedRoute>
+        </Route>
+        <Route path="/messages/:userId">
+          {params => <ProtectedRoute><Messages initialUserId={params.userId} /></ProtectedRoute>}
+        </Route>
 
         <Route path="/admin" component={Admin} />
         <Route path="/admin-login" component={AdminLogin} />
@@ -84,6 +102,7 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
+          <UsernamePrompt />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

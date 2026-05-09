@@ -63,6 +63,8 @@ export const MyProfileTier = {
 
 export interface MyProfile {
   id: string;
+  /** @nullable */
+  username: string | null;
   displayName: string;
   /** @nullable */
   bio: string | null;
@@ -355,6 +357,46 @@ export interface UnreadCountResponse {
 
 export interface MarkAllReadResponse {
   updated: number;
+}
+
+export interface SetUsernameBody {
+  username: string;
+}
+
+export interface PostMessageBody {
+  /**
+   * @minLength 1
+   * @maxLength 1000
+   */
+  content: string;
+}
+
+export interface LoanMessage {
+  id: string;
+  loanId: string;
+  senderId: string;
+  senderUsername: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface DirectMessage {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  fromUsername: string;
+  toUsername: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface Conversation {
+  userId: string;
+  username: string;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
 }
 
 /**

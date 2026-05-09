@@ -11,6 +11,7 @@ import {
   getGetMyProfileQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@workspace/replit-auth-web";
 import { formatMoney, formatPercentage, formatDate } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,13 +23,15 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShieldCheck, Calendar, Info, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Calendar, Info, CheckCircle2, Clock, AlertCircle, MessageSquare } from "lucide-react";
 import { LoanAgreementModal } from "@/components/loan-agreement-modal";
+import { LoanChat } from "@/components/loan-chat";
 
 export function LoanDetail({ id }: { id: string }) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const [fundAmount, setFundAmount] = useState<string>("");
   const [showAgreement, setShowAgreement] = useState(false);
 
@@ -184,11 +187,24 @@ export function LoanDetail({ id }: { id: string }) {
                       </Badge>
                     </div>
                   </div>
-                  <div className="text-right flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-primary" />
-                    <div>
-                      <div className="text-xs font-mono text-muted-foreground uppercase">Trust Score</div>
-                      <div className="font-bold font-mono text-xl">{loan.borrowerTrustScore}/1000</div>
+                  <div className="flex items-center gap-3">
+                    {isAuthenticated && !isBorrower && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-none font-mono gap-1.5"
+                        onClick={() => setLocation(`/messages/${loan.borrowerId}`)}
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        Message
+                      </Button>
+                    )}
+                    <div className="text-right flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                      <div>
+                        <div className="text-xs font-mono text-muted-foreground uppercase">Trust Score</div>
+                        <div className="font-bold font-mono text-xl">{loan.borrowerTrustScore}/1000</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -253,6 +269,17 @@ export function LoanDetail({ id }: { id: string }) {
               </div>
             </div>
           )}
+
+          {/* Loan Discussion Chat */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold tracking-tighter uppercase font-mono border-b border-border pb-2">Discussion</h2>
+            <LoanChat
+              loanId={id}
+              myId={profile?.id}
+              myUsername={profile?.username ?? null}
+              isAuthenticated={isAuthenticated}
+            />
+          </div>
         </div>
 
         {/* Sidebar Actions */}

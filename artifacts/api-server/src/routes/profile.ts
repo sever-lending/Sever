@@ -13,8 +13,12 @@ import {
   UpdateMyProfileResponse,
   WithdrawFundsBody,
   WithdrawFundsResponse,
+  ChangeUsernameResponse,
 } from "@workspace/api-zod";
+import { z } from "zod";
 import { num, round2, tierFromScore } from "../lib/lending";
+
+const UsernameSchema = z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/);
 
 const router: IRouter = Router();
 
@@ -71,6 +75,7 @@ async function buildMyProfile(userId: string) {
   const trustScore = profile.trustScore;
   return GetMyProfileResponse.parse({
     id: profile.userId,
+    username: profile.username ?? null,
     displayName: profile.displayName,
     bio: profile.bio,
     profileImageUrl: user?.profileImageUrl ?? null,
@@ -115,6 +120,34 @@ router.patch("/profile/me", async (req, res): Promise<void> => {
     .where(eq(profilesTable.userId, req.user.id));
   const out = await buildMyProfile(req.user.id);
   res.json(UpdateMyProfileResponse.parse(out));
+});
+
+router.put("/profile/username", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const parsed = UsernameSchema.safeParse(req.body?.username);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Username must be 3-30 characters, letters, numbers and underscores only." });
+    return;
+  }
+  const username = parsed.data;
+  await ensureProfile(req.user.id);
+  try {
+    await db
+      .update(profilesTable)
+      .set({ username })
+      .where(eq(profilesTable.userId, req.user.id));
+  } catch (err: any) {
+    if (err?.code === "23505") {
+      res.status(409).json({ error: "That username is already taken. Try another." });
+      return;
+    }
+    throw err;
+  }
+  const out = await buildMyProfile(req.user.id);
+  res.json(ChangeUsernameResponse.parse(out));
 });
 
 router.post("/profile/withdraw", async (req, res): Promise<void> => {

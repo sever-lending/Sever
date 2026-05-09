@@ -20,9 +20,11 @@ import type {
   ActivityItem,
   AuthUserEnvelope,
   BeginBrowserLoginParams,
+  Conversation,
   CreateLoanBody,
   DashboardOverview,
   DepositBody,
+  DirectMessage,
   ErrorEnvelope,
   FundLoanRequest,
   HandleBrowserLoginCallbackParams,
@@ -31,6 +33,7 @@ import type {
   ListLoansParams,
   ListNotificationsParams,
   LoanDetail,
+  LoanMessage,
   LoanSummary,
   LogoutSuccess,
   MarkAllReadResponse,
@@ -39,6 +42,8 @@ import type {
   MyProfile,
   NotificationItem,
   PlatformStats,
+  PostMessageBody,
+  SetUsernameBody,
   UnreadCountResponse,
   UpdateProfileBody,
   WithdrawBody,
@@ -2287,4 +2292,588 @@ export const useMarkNotificationRead = <
   TContext
 > => {
   return useMutation(getMarkNotificationReadMutationOptions(options));
+};
+
+/**
+ * @summary Set or update the user's unique username
+ */
+export const getChangeUsernameUrl = () => {
+  return `/api/profile/username`;
+};
+
+export const changeUsername = async (
+  setUsernameBody: SetUsernameBody,
+  options?: RequestInit,
+): Promise<MyProfile> => {
+  return customFetch<MyProfile>(getChangeUsernameUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setUsernameBody),
+  });
+};
+
+export const getChangeUsernameMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeUsername>>,
+    TError,
+    { data: BodyType<SetUsernameBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeUsername>>,
+  TError,
+  { data: BodyType<SetUsernameBody> },
+  TContext
+> => {
+  const mutationKey = ["changeUsername"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeUsername>>,
+    { data: BodyType<SetUsernameBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return changeUsername(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeUsernameMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeUsername>>
+>;
+export type ChangeUsernameMutationBody = BodyType<SetUsernameBody>;
+export type ChangeUsernameMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Set or update the user's unique username
+ */
+export const useChangeUsername = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeUsername>>,
+    TError,
+    { data: BodyType<SetUsernameBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof changeUsername>>,
+  TError,
+  { data: BodyType<SetUsernameBody> },
+  TContext
+> => {
+  return useMutation(getChangeUsernameMutationOptions(options));
+};
+
+/**
+ * @summary Get the chat thread for a loan project
+ */
+export const getListLoanMessagesUrl = (id: string) => {
+  return `/api/loans/${id}/messages`;
+};
+
+export const listLoanMessages = async (
+  id: string,
+  options?: RequestInit,
+): Promise<LoanMessage[]> => {
+  return customFetch<LoanMessage[]>(getListLoanMessagesUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListLoanMessagesQueryKey = (id: string) => {
+  return [`/api/loans/${id}/messages`] as const;
+};
+
+export const getListLoanMessagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listLoanMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listLoanMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListLoanMessagesQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listLoanMessages>>
+  > = ({ signal }) => listLoanMessages(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listLoanMessages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListLoanMessagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listLoanMessages>>
+>;
+export type ListLoanMessagesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the chat thread for a loan project
+ */
+
+export function useListLoanMessages<
+  TData = Awaited<ReturnType<typeof listLoanMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listLoanMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListLoanMessagesQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Post a message to a loan project chat
+ */
+export const getPostLoanMessageUrl = (id: string) => {
+  return `/api/loans/${id}/messages`;
+};
+
+export const postLoanMessage = async (
+  id: string,
+  postMessageBody: PostMessageBody,
+  options?: RequestInit,
+): Promise<LoanMessage> => {
+  return customFetch<LoanMessage>(getPostLoanMessageUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(postMessageBody),
+  });
+};
+
+export const getPostLoanMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postLoanMessage>>,
+    TError,
+    { id: string; data: BodyType<PostMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postLoanMessage>>,
+  TError,
+  { id: string; data: BodyType<PostMessageBody> },
+  TContext
+> => {
+  const mutationKey = ["postLoanMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postLoanMessage>>,
+    { id: string; data: BodyType<PostMessageBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return postLoanMessage(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostLoanMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postLoanMessage>>
+>;
+export type PostLoanMessageMutationBody = BodyType<PostMessageBody>;
+export type PostLoanMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Post a message to a loan project chat
+ */
+export const usePostLoanMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postLoanMessage>>,
+    TError,
+    { id: string; data: BodyType<PostMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof postLoanMessage>>,
+  TError,
+  { id: string; data: BodyType<PostMessageBody> },
+  TContext
+> => {
+  return useMutation(getPostLoanMessageMutationOptions(options));
+};
+
+/**
+ * @summary List all DM conversations for the current user
+ */
+export const getListConversationsUrl = () => {
+  return `/api/messages/conversations`;
+};
+
+export const listConversations = async (
+  options?: RequestInit,
+): Promise<Conversation[]> => {
+  return customFetch<Conversation[]>(getListConversationsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListConversationsQueryKey = () => {
+  return [`/api/messages/conversations`] as const;
+};
+
+export const getListConversationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listConversations>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listConversations>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListConversationsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listConversations>>
+  > = ({ signal }) => listConversations({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listConversations>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListConversationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listConversations>>
+>;
+export type ListConversationsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all DM conversations for the current user
+ */
+
+export function useListConversations<
+  TData = Awaited<ReturnType<typeof listConversations>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listConversations>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListConversationsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Count of unread DMs
+ */
+export const getGetDmUnreadCountUrl = () => {
+  return `/api/messages/unread-count`;
+};
+
+export const getDmUnreadCount = async (
+  options?: RequestInit,
+): Promise<UnreadCountResponse> => {
+  return customFetch<UnreadCountResponse>(getGetDmUnreadCountUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDmUnreadCountQueryKey = () => {
+  return [`/api/messages/unread-count`] as const;
+};
+
+export const getGetDmUnreadCountQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDmUnreadCount>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDmUnreadCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDmUnreadCountQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDmUnreadCount>>
+  > = ({ signal }) => getDmUnreadCount({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDmUnreadCount>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDmUnreadCountQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDmUnreadCount>>
+>;
+export type GetDmUnreadCountQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Count of unread DMs
+ */
+
+export function useGetDmUnreadCount<
+  TData = Awaited<ReturnType<typeof getDmUnreadCount>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDmUnreadCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDmUnreadCountQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get the DM thread with a specific user
+ */
+export const getGetConversationUrl = (userId: string) => {
+  return `/api/messages/${userId}`;
+};
+
+export const getConversation = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<DirectMessage[]> => {
+  return customFetch<DirectMessage[]>(getGetConversationUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetConversationQueryKey = (userId: string) => {
+  return [`/api/messages/${userId}`] as const;
+};
+
+export const getGetConversationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getConversation>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getConversation>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetConversationQueryKey(userId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversation>>> = ({
+    signal,
+  }) => getConversation(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getConversation>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetConversationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getConversation>>
+>;
+export type GetConversationQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the DM thread with a specific user
+ */
+
+export function useGetConversation<
+  TData = Awaited<ReturnType<typeof getConversation>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getConversation>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetConversationQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Send a direct message to a user
+ */
+export const getSendDirectMessageUrl = (userId: string) => {
+  return `/api/messages/${userId}`;
+};
+
+export const sendDirectMessage = async (
+  userId: string,
+  postMessageBody: PostMessageBody,
+  options?: RequestInit,
+): Promise<DirectMessage> => {
+  return customFetch<DirectMessage>(getSendDirectMessageUrl(userId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(postMessageBody),
+  });
+};
+
+export const getSendDirectMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendDirectMessage>>,
+    TError,
+    { userId: string; data: BodyType<PostMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendDirectMessage>>,
+  TError,
+  { userId: string; data: BodyType<PostMessageBody> },
+  TContext
+> => {
+  const mutationKey = ["sendDirectMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendDirectMessage>>,
+    { userId: string; data: BodyType<PostMessageBody> }
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return sendDirectMessage(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendDirectMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendDirectMessage>>
+>;
+export type SendDirectMessageMutationBody = BodyType<PostMessageBody>;
+export type SendDirectMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a direct message to a user
+ */
+export const useSendDirectMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendDirectMessage>>,
+    TError,
+    { userId: string; data: BodyType<PostMessageBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendDirectMessage>>,
+  TError,
+  { userId: string; data: BodyType<PostMessageBody> },
+  TContext
+> => {
+  return useMutation(getSendDirectMessageMutationOptions(options));
 };

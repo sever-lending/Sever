@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   numeric,
@@ -14,6 +15,7 @@ export const profilesTable = pgTable("profiles", {
   userId: varchar("user_id")
     .primaryKey()
     .references(() => usersTable.id, { onDelete: "cascade" }),
+  username: varchar("username", { length: 30 }).unique(),
   displayName: varchar("display_name").notNull(),
   bio: text("bio"),
   walletBalance: numeric("wallet_balance", { precision: 14, scale: 2 })
@@ -193,6 +195,53 @@ export const processedSessionsTable = pgTable("processed_sessions", {
     .defaultNow(),
 });
 
+export const loanMessagesTable = pgTable(
+  "loan_messages",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    loanId: varchar("loan_id")
+      .notNull()
+      .references(() => loansTable.id, { onDelete: "cascade" }),
+    senderId: varchar("sender_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("IDX_loan_messages_loan").on(table.loanId),
+    index("IDX_loan_messages_sender").on(table.senderId),
+  ],
+);
+
+export const directMessagesTable = pgTable(
+  "direct_messages",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    fromUserId: varchar("from_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    toUserId: varchar("to_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    read: boolean("read").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("IDX_dm_from").on(table.fromUserId),
+    index("IDX_dm_to").on(table.toUserId),
+  ],
+);
+
 export type Profile = typeof profilesTable.$inferSelect;
 export type Loan = typeof loansTable.$inferSelect;
 export type Funding = typeof fundingsTable.$inferSelect;
@@ -200,3 +249,5 @@ export type Installment = typeof installmentsTable.$inferSelect;
 export type Activity = typeof activityTable.$inferSelect;
 export type Notification = typeof notificationsTable.$inferSelect;
 export type ProcessedSession = typeof processedSessionsTable.$inferSelect;
+export type LoanMessage = typeof loanMessagesTable.$inferSelect;
+export type DirectMessage = typeof directMessagesTable.$inferSelect;

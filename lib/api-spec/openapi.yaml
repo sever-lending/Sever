@@ -24,6 +24,8 @@ tags:
     description: Activity feed
   - name: notifications
     description: In-app notification bell
+  - name: messages
+    description: Loan project chat and direct messages
 paths:
   /healthz:
     get:
@@ -502,6 +504,143 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotificationItem'
 
+  /profile/username:
+    put:
+      tags: [profile]
+      operationId: changeUsername
+      summary: Set or update the user's unique username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUsernameBody'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProfile'
+        '409':
+          description: Username already taken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /loans/{id}/messages:
+    get:
+      tags: [messages]
+      operationId: listLoanMessages
+      summary: Get the chat thread for a loan project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanMessage'
+    post:
+      tags: [messages]
+      operationId: postLoanMessage
+      summary: Post a message to a loan project chat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostMessageBody'
+      responses:
+        '201':
+          description: Created message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanMessage'
+
+  /messages/conversations:
+    get:
+      tags: [messages]
+      operationId: listConversations
+      summary: List all DM conversations for the current user
+      responses:
+        '200':
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+
+  /messages/unread-count:
+    get:
+      tags: [messages]
+      operationId: getDmUnreadCount
+      summary: Count of unread DMs
+      responses:
+        '200':
+          description: Count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCountResponse'
+
+  /messages/{userId}:
+    get:
+      tags: [messages]
+      operationId: getConversation
+      summary: Get the DM thread with a specific user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DirectMessage'
+    post:
+      tags: [messages]
+      operationId: sendDirectMessage
+      summary: Send a direct message to a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostMessageBody'
+      responses:
+        '201':
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectMessage'
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -582,6 +721,7 @@ components:
       type: object
       required:
         - id
+        - username
         - displayName
         - bio
         - profileImageUrl
@@ -596,6 +736,7 @@ components:
         - latePayments
       properties:
         id: { type: string }
+        username: { type: [string, 'null'] }
         displayName: { type: string }
         bio: { type: [string, 'null'] }
         profileImageUrl: { type: [string, 'null'] }
@@ -857,3 +998,50 @@ components:
       required: [updated]
       properties:
         updated: { type: integer }
+
+    SetUsernameBody:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+
+    PostMessageBody:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1, maxLength: 1000 }
+
+    LoanMessage:
+      type: object
+      required: [id, loanId, senderId, senderUsername, content, createdAt]
+      properties:
+        id: { type: string }
+        loanId: { type: string }
+        senderId: { type: string }
+        senderUsername: { type: string }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    DirectMessage:
+      type: object
+      required: [id, fromUserId, toUserId, fromUsername, toUsername, content, read, createdAt]
+      properties:
+        id: { type: string }
+        fromUserId: { type: string }
+        toUserId: { type: string }
+        fromUsername: { type: string }
+        toUsername: { type: string }
+        content: { type: string }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    Conversation:
+      type: object
+      required: [userId, username, lastMessage, lastMessageAt, unreadCount]
+      properties:
+        userId: { type: string }
+        username: { type: string }
+        lastMessage: { type: string }
+        lastMessageAt: { type: string, format: date-time }
+        unreadCount: { type: integer }

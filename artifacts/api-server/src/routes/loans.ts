@@ -37,11 +37,8 @@ import { notify } from "../lib/notify";
 
 const router: IRouter = Router();
 
-interface BorrowerJoinRow {
-  loan: typeof loansTable.$inferSelect;
-  displayName: string;
-  trustScore: number;
-  bio: string | null;
+function handle(username: string | null, displayName: string) {
+  return username ? `@${username}` : displayName;
 }
 
 async function loadBorrowers(userIds: string[]) {
@@ -49,6 +46,7 @@ async function loadBorrowers(userIds: string[]) {
   const rows = await db
     .select({
       userId: profilesTable.userId,
+      username: profilesTable.username,
       displayName: profilesTable.displayName,
       trustScore: profilesTable.trustScore,
       bio: profilesTable.bio,
@@ -57,7 +55,7 @@ async function loadBorrowers(userIds: string[]) {
     .where(inArray(profilesTable.userId, userIds));
   const map = new Map<string, { name: string; trustScore: number; bio: string | null }>();
   for (const r of rows) {
-    map.set(r.userId, { name: r.displayName, trustScore: r.trustScore, bio: r.bio });
+    map.set(r.userId, { name: handle(r.username, r.displayName), trustScore: r.trustScore, bio: r.bio });
   }
   return map;
 }
@@ -170,7 +168,8 @@ router.get("/loans/:id", async (req, res): Promise<void> => {
       lenderId: fundingsTable.lenderId,
       amount: fundingsTable.amount,
       createdAt: fundingsTable.createdAt,
-      lenderName: profilesTable.displayName,
+      lenderDisplayName: profilesTable.displayName,
+      lenderUsername: profilesTable.username,
     })
     .from(fundingsTable)
     .leftJoin(profilesTable, eq(profilesTable.userId, fundingsTable.lenderId))
@@ -197,7 +196,7 @@ router.get("/loans/:id", async (req, res): Promise<void> => {
       lenderId: f.lenderId,
       amount: f.amount,
       createdAt: f.createdAt,
-      lenderName: f.lenderName ?? "Anonymous",
+      lenderName: handle(f.lenderUsername ?? null, f.lenderDisplayName ?? "Anonymous"),
     })),
     schedule,
   );
@@ -456,7 +455,8 @@ router.post("/loans/:id/fund", async (req, res): Promise<void> => {
       lenderId: fundingsTable.lenderId,
       amount: fundingsTable.amount,
       createdAt: fundingsTable.createdAt,
-      lenderName: profilesTable.displayName,
+      lenderDisplayName: profilesTable.displayName,
+      lenderUsername: profilesTable.username,
     })
     .from(fundingsTable)
     .leftJoin(profilesTable, eq(profilesTable.userId, fundingsTable.lenderId))
@@ -480,7 +480,7 @@ router.post("/loans/:id/fund", async (req, res): Promise<void> => {
       lenderId: f.lenderId,
       amount: f.amount,
       createdAt: f.createdAt,
-      lenderName: f.lenderName ?? "Anonymous",
+      lenderName: handle(f.lenderUsername ?? null, f.lenderDisplayName ?? "Anonymous"),
     })),
     schedule,
   );
