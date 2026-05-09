@@ -34,6 +34,7 @@ function RootLayoutNav() {
       <Stack.Screen name="loan/[id]" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="login" options={{ headerShown: false, presentation: "modal" }} />
       <Stack.Screen name="premium" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="mobile-auth/callback" options={{ headerShown: false }} />
     </Stack>
   );
 }

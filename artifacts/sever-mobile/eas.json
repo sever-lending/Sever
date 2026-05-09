@@ -7,13 +7,19 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "YOUR_REPLIT_APP_DOMAIN_HERE"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
       },
-      "ios": {}
+      "ios": {},
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "YOUR_REPLIT_APP_DOMAIN_HERE"
+      }
     }
   },
   "submit": {
