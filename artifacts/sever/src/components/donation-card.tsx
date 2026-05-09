@@ -40,7 +40,7 @@ export function DonationCard() {
         <div>
           <p className="font-bold text-sm leading-tight mb-0.5">Support Sever</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Sever is free to use. If it's helped you save or earn money, a small donation keeps the platform independent and the team motivated.
+            Servers, security audits, and compliance don't come free. Every donation goes directly toward keeping Sever online, fast, and improving.
           </p>
         </div>
       </div>

@@ -226,7 +226,7 @@ export default function ProfileScreen() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.donateTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Support Sever</Text>
               <Text style={[styles.donateSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
-                Free to use. Your donation keeps us independent.
+                Servers & security cost real money. Help keep Sever running.
               </Text>
             </View>
           </View>
