@@ -18,7 +18,7 @@ export function LoanContract() {
       <div className="space-y-8 text-sm text-muted-foreground leading-relaxed">
         <section className="rounded-lg border border-border bg-card p-6">
           <h2 className="text-base font-semibold text-foreground mb-4">PROMISSORY NOTE AND PEER-TO-PEER LOAN AGREEMENT</h2>
-          <p>This Peer-to-Peer Loan Agreement and Promissory Note ("Agreement") is entered into between the identified Borrower and the Lender(s) as specified in the applicable loan listing on the Sever Platform. Sever Financial, LLC ("Platform Operator") is a non-party facilitator and marketplace intermediary. This Agreement is not a loan from Sever Financial, LLC.</p>
+          <p>This Peer-to-Peer Loan Agreement and Promissory Note ("Agreement") is entered into between the identified Borrower and the Lender(s) as specified in the applicable loan listing on the Sever Platform. Sever Lending, LLC ("Platform Operator") is a non-party facilitator and marketplace intermediary. This Agreement is not a loan from Sever Lending, LLC.</p>
           <p className="mt-3 text-xs text-muted-foreground/70">This Agreement is entered into electronically and is governed by the Electronic Signatures in Global and National Commerce Act (E-SIGN Act), 15 U.S.C. § 7001 et seq., and applicable state electronic transactions laws.</p>
         </section>
 
@@ -93,12 +93,12 @@ export function LoanContract() {
 
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-3">Article 9 — Platform as Non-Party Intermediary</h2>
-          <p>Sever Financial, LLC acts solely as a marketplace operator and technology intermediary. The Platform Operator is NOT a party to this Agreement, does not originate or fund loans, does not act as agent for either party, and is not responsible for collection of defaulted loans beyond the facilitation services described in the Terms of Service. All obligations under this Agreement run directly between the Borrower and Lender(s).</p>
+          <p>Sever Lending, LLC acts solely as a marketplace operator and technology intermediary. The Platform Operator is NOT a party to this Agreement, does not originate or fund loans, does not act as agent for either party, and is not responsible for collection of defaulted loans beyond the facilitation services described in the Terms of Service. All obligations under this Agreement run directly between the Borrower and Lender(s).</p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-3">Article 10 — Dispute Resolution</h2>
-          <p>Any dispute between Borrower and Lender(s) arising from this Agreement shall first be submitted through the Platform's dispute resolution process. If unresolved, disputes shall be submitted to binding arbitration under the AAA Consumer Arbitration Rules, or if not applicable, to courts of competent jurisdiction in the state of the Borrower's residence. Disputes between users and Sever Financial, LLC are governed by the arbitration provision in the Terms of Service.</p>
+          <p>Any dispute between Borrower and Lender(s) arising from this Agreement shall first be submitted through the Platform's dispute resolution process. If unresolved, disputes shall be submitted to binding arbitration under the AAA Consumer Arbitration Rules, or if not applicable, to courts of competent jurisdiction in the state of the Borrower's residence. Disputes between users and Sever Lending, LLC are governed by the arbitration provision in the Terms of Service.</p>
         </section>
 
         <section>

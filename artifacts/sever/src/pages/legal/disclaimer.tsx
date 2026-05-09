@@ -11,14 +11,14 @@ export function Disclaimer() {
       <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-5 mb-8">
         <p className="text-sm font-bold text-destructive uppercase tracking-wide mb-2">IMPORTANT — READ CAREFULLY BEFORE USING THIS PLATFORM</p>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          This disclaimer contains important legal information regarding the risks associated with peer-to-peer lending, the regulatory status of Sever Financial, LLC, and the limitations of our services. By using this Platform, you confirm that you have read and understood this entire Disclaimer. If you do not agree, do not use the Platform.
+          This disclaimer contains important legal information regarding the risks associated with peer-to-peer lending, the regulatory status of Sever Lending, LLC, and the limitations of our services. By using this Platform, you confirm that you have read and understood this entire Disclaimer. If you do not agree, do not use the Platform.
         </p>
       </div>
 
       <div className="space-y-8 text-sm text-muted-foreground leading-relaxed">
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-3">1. Not a Bank or Licensed Financial Institution</h2>
-          <p>Sever Financial, LLC is a Delaware-registered technology company and marketplace operator. It is NOT:</p>
+          <p>Sever Lending, LLC is a Delaware-registered technology company and marketplace operator. It is NOT:</p>
           <ul className="list-disc ml-6 mt-2 space-y-1">
             <li>A bank or credit union insured by the FDIC or NCUA</li>
             <li>A licensed money transmitter or payment processor (payment processing is provided by Stripe, Inc.)</li>

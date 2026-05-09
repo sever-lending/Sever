@@ -77,7 +77,7 @@ export function LoanAgreementModal({
 
             <div className="space-y-3">
               <h3 className="font-semibold text-foreground">PROMISSORY NOTE AND LOAN AGREEMENT</h3>
-              <p>This agreement is entered into between the Borrower and Lender(s) as identified on the Sever Platform, facilitated by Sever Financial, LLC as a non-party intermediary.</p>
+              <p>This agreement is entered into between the Borrower and Lender(s) as identified on the Sever Platform, facilitated by Sever Lending, LLC as a non-party intermediary.</p>
 
               {role === "borrower" ? (
                 <>
@@ -93,7 +93,7 @@ export function LoanAgreementModal({
                 </>
               )}
 
-              <p>By clicking "Accept & Sign", you are providing a legally binding electronic signature under the E-SIGN Act and applicable state law. A timestamped digital record of this agreement will be maintained by Sever Financial, LLC.</p>
+              <p>By clicking "Accept & Sign", you are providing a legally binding electronic signature under the E-SIGN Act and applicable state law. A timestamped digital record of this agreement will be maintained by Sever Lending, LLC.</p>
             </div>
           </div>
         </ScrollArea>

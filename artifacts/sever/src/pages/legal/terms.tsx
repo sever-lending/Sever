@@ -21,7 +21,7 @@ export function Terms() {
         <div className="space-y-8 text-sm text-muted-foreground leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-3">1. Acceptance of Terms</h2>
-            <p>By accessing or using the Sever platform, mobile application, or any related services (collectively, the "Platform"), you agree to be bound by these Terms of Service ("Terms"), our Privacy Policy, and our Risk Disclaimer. If you do not agree to all Terms, you must immediately cease use of the Platform. Sever Financial, LLC ("Sever," "we," "us," or "our") reserves the right to modify these Terms at any time upon notice posted to the Platform. Continued use after changes constitutes acceptance.</p>
+            <p>By accessing or using the Sever platform, mobile application, or any related services (collectively, the "Platform"), you agree to be bound by these Terms of Service ("Terms"), our Privacy Policy, and our Risk Disclaimer. If you do not agree to all Terms, you must immediately cease use of the Platform. Sever Lending, LLC ("Sever," "we," "us," or "our") reserves the right to modify these Terms at any time upon notice posted to the Platform. Continued use after changes constitutes acceptance.</p>
           </section>
 
           <section>

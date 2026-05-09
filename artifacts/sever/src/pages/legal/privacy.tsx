@@ -10,7 +10,7 @@ export function Privacy() {
         </p>
 
         <p className="text-sm text-muted-foreground mb-8">
-          Sever Financial, LLC ("Sever," "we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, share, and protect your personal information in connection with our peer-to-peer lending marketplace (the "Platform"). This policy applies to U.S. residents and is designed to comply with applicable federal and state privacy laws, including the Gramm-Leach-Bliley Act (GLB Act), the California Consumer Privacy Act (CCPA/CPRA), and other applicable regulations.
+          Sever Lending, LLC ("Sever," "we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, share, and protect your personal information in connection with our peer-to-peer lending marketplace (the "Platform"). This policy applies to U.S. residents and is designed to comply with applicable federal and state privacy laws, including the Gramm-Leach-Bliley Act (GLB Act), the California Consumer Privacy Act (CCPA/CPRA), and other applicable regulations.
         </p>
 
         <div className="space-y-8 text-sm text-muted-foreground leading-relaxed">
