@@ -10,6 +10,7 @@ import { ArrowRight, Wallet, Activity, TrendingUp, AlertCircle, CheckCircle2, Cl
 import { usePayInstallment } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyState } from "@/components/empty-state";
+import { DonationCard } from "@/components/donation-card";
 
 export function Dashboard() {
   const { data: overview, isLoading: overviewLoading } = useGetDashboardOverview();
@@ -205,6 +206,7 @@ export function Dashboard() {
               </div>
               <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             </Link>
+            <DonationCard />
           </CardContent>
         </Card>
       </div>

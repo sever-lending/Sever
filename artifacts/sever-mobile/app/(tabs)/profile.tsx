@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Linking } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -64,8 +65,28 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const { data: profile, isLoading } = useGetMyProfile();
+  const BASE_URL = `https://${process.env.EXPO_PUBLIC_DOMAIN ?? ""}`;
+
+  const handleDonate = async (amount: number) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/stripe/donation-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ amount }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        await Linking.openURL(data.url);
+      }
+    } catch {
+      // silently ignore
+    }
+  };
 
   const shareApp = async () => {
     try {
@@ -196,6 +217,32 @@ export default function ProfileScreen() {
           </View>
           <Feather name="chevron-right" size={16} color={colors.primary} />
         </TouchableOpacity>
+
+        <View style={[styles.donateCard, { backgroundColor: "#2DD4A015", borderColor: "#2DD4A040" }]}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <View style={[styles.donateIcon, { backgroundColor: "#2DD4A020" }]}>
+              <Feather name="heart" size={14} color="#2DD4A0" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.donateTitle, { color: colors.foreground, fontFamily: "Inter_700Bold" }]}>Support Sever</Text>
+              <Text style={[styles.donateSub, { color: colors.mutedForeground, fontFamily: "Inter_400Regular" }]}>
+                Free to use. Your donation keeps us independent.
+              </Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", gap: 6 }}>
+            {[3, 5, 10, 25].map((amt) => (
+              <TouchableOpacity
+                key={amt}
+                style={[styles.donateBtn, { borderColor: "#2DD4A060", backgroundColor: "#2DD4A010" }]}
+                onPress={() => handleDonate(amt)}
+                activeOpacity={0.7}
+              >
+                <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#2DD4A0" }}>${amt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
         <View style={[styles.menuCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <MenuItem icon="shield" label="KYC Verification" onPress={() => {}} colors={colors} />
@@ -339,6 +386,11 @@ const styles = StyleSheet.create({
   },
   logoutText: { fontSize: 14 },
   version: { fontSize: 11, textAlign: "center" },
+  donateCard: { borderRadius: R, borderWidth: 1, padding: 14 },
+  donateIcon: { width: 30, height: 30, borderRadius: 15, justifyContent: "center", alignItems: "center" },
+  donateTitle: { fontSize: 13 },
+  donateSub: { fontSize: 11, marginTop: 1, lineHeight: 15 },
+  donateBtn: { flex: 1, height: 32, borderRadius: 8, borderWidth: 1, justifyContent: "center", alignItems: "center" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 14, paddingHorizontal: 32 },
   gateIcon: { width: 64, height: 64, borderRadius: 32, justifyContent: "center", alignItems: "center", borderWidth: 1 },
   gateTitle: { fontSize: 20, letterSpacing: -0.2 },

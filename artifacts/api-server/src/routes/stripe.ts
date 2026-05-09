@@ -154,4 +154,47 @@ router.post("/stripe/confirm-deposit", async (req, res): Promise<void> => {
   }
 });
 
+router.post("/stripe/donation-session", async (req, res): Promise<void> => {
+  const { amount } = req.body;
+  const validAmounts = [3, 5, 10, 25];
+  if (!amount || !validAmounts.includes(Number(amount))) {
+    res.status(400).json({ error: "Amount must be one of $3, $5, $10, or $25" });
+    return;
+  }
+
+  try {
+    const stripe = await getUncachableStripeClient();
+    const domains = process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost";
+    const baseUrl = domains.startsWith("localhost")
+      ? `http://${domains}`
+      : `https://${domains}`;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Support Sever",
+              description: "Help keep the platform independent and growing",
+            },
+            unit_amount: Number(amount) * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: { type: "donation", amount: String(amount) },
+      success_url: `${baseUrl}/?donated=1`,
+      cancel_url: `${baseUrl}/`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err: any) {
+    req.log.error({ err }, "Failed to create donation session");
+    res.status(500).json({ error: "Failed to create donation session" });
+  }
+});
+
 export default router;
