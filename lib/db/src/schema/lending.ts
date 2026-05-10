@@ -29,6 +29,8 @@ export const profilesTable = pgTable("profiles", {
   kycVerifiedAt: timestamp("kyc_verified_at", { withTimezone: true }),
   ageVerified: boolean("age_verified").notNull().default(false),
   ageVerifiedAt: timestamp("age_verified_at", { withTimezone: true }),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
   isPremium: boolean("is_premium").notNull().default(false),
   premiumSince: timestamp("premium_since", { withTimezone: true }),
   premiumUntil: timestamp("premium_until", { withTimezone: true }),
