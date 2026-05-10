@@ -81,6 +81,12 @@ export interface MyProfile {
   totalBorrowed: number;
   onTimePayments: number;
   latePayments: number;
+  isPremium: boolean;
+  /**
+   * ISO timestamp when premium expires
+   * @nullable
+   */
+  premiumUntil: string | null;
 }
 
 export interface UpdateProfileBody {

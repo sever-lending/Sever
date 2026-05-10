@@ -734,6 +734,8 @@ components:
         - totalBorrowed
         - onTimePayments
         - latePayments
+        - isPremium
+        - premiumUntil
       properties:
         id: { type: string }
         username: { type: [string, 'null'] }
@@ -749,6 +751,8 @@ components:
         totalBorrowed: { type: number }
         onTimePayments: { type: integer }
         latePayments: { type: integer }
+        isPremium: { type: boolean }
+        premiumUntil: { type: [string, 'null'], description: "ISO timestamp when premium expires" }
 
     UpdateProfileBody:
       type: object

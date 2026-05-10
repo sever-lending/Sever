@@ -1,15 +1,16 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useGetMyProfile, getGetMyProfileQueryKey } from "@workspace/api-client-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Layout & UI
 import { Layout } from "@/components/layout";
 import { ProtectedRoute } from "@/components/protected-route";
 import { UsernameSetupModal } from "@/components/username-setup-modal";
+import { PremiumModal } from "@/components/premium-modal";
 
 // Pages
 import { Landing } from "@/pages/landing";
@@ -45,6 +46,76 @@ function UsernamePrompt() {
   const [dismissed, setDismissed] = useState(false);
   const showModal = !!user && !!profile && profile.username === null && !dismissed;
   return <UsernameSetupModal open={showModal} onClose={() => setDismissed(true)} />;
+}
+
+// Handles returning from Stripe premium checkout — detects ?premium_session_id= in the URL,
+// confirms the purchase with the API, then refreshes the profile and clears the query param.
+function PremiumConfirmHandler() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [, setLocation] = useLocation();
+  const confirmed = useRef(false);
+
+  useEffect(() => {
+    if (!user || confirmed.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("premium_session_id");
+    if (!sessionId) return;
+    confirmed.current = true;
+
+    fetch(`${import.meta.env.BASE_URL}api/stripe/confirm-premium`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ sessionId }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+          // Mark as shown so the upsell modal doesn't reappear
+          localStorage.setItem(`sever_premium_shown_${user.id}`, "1");
+          // Strip query params from URL
+          const clean = window.location.pathname;
+          setLocation(clean, { replace: true });
+        }
+      })
+      .catch(() => {});
+  }, [user, qc, setLocation]);
+
+  return null;
+}
+
+function PremiumUpsell() {
+  const { user } = useAuth();
+  const { data: profile } = useGetMyProfile({
+    query: { queryKey: getGetMyProfileQueryKey(), enabled: !!user },
+  });
+  const [open, setOpen] = useState(false);
+  const shown = useRef(false);
+
+  useEffect(() => {
+    if (!user || !profile || shown.current) return;
+    if (profile.isPremium) return; // already premium
+    const key = `sever_premium_shown_${user.id}`;
+    if (localStorage.getItem(key)) return; // already dismissed
+    shown.current = true;
+    // Small delay so the page content loads first
+    const t = setTimeout(() => setOpen(true), 1800);
+    return () => clearTimeout(t);
+  }, [user, profile]);
+
+  function handleClose() {
+    setOpen(false);
+    if (user) localStorage.setItem(`sever_premium_shown_${user.id}`, "1");
+  }
+
+  function handleSuccess() {
+    setOpen(false);
+    if (user) localStorage.setItem(`sever_premium_shown_${user.id}`, "1");
+  }
+
+  return <PremiumModal open={open} onClose={handleClose} onSuccess={handleSuccess} />;
 }
 
 function Router() {
@@ -113,6 +184,8 @@ function App() {
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
           <UsernamePrompt />
+          <PremiumConfirmHandler />
+          <PremiumUpsell />
           <AgeGateModal />
         </WouterRouter>
         <Toaster />

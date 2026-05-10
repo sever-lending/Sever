@@ -197,4 +197,121 @@ router.post("/stripe/donation-session", async (req, res): Promise<void> => {
   }
 });
 
+// ─── Premium subscription ─────────────────────────────────────────────────────
+
+router.post("/stripe/premium-session", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const { plan } = req.body;
+  if (plan !== "monthly" && plan !== "annual") {
+    res.status(400).json({ error: "plan must be 'monthly' or 'annual'" });
+    return;
+  }
+
+  const amount = plan === "monthly" ? 14.99 : 99;
+  const durationDays = plan === "monthly" ? 30 : 365;
+  const planLabel = plan === "monthly" ? "Monthly ($14.99/mo)" : "Annual ($99/yr — save 45%)";
+
+  try {
+    const stripe = await getUncachableStripeClient();
+    const domains = process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost";
+    const baseUrl = domains.startsWith("localhost")
+      ? `http://${domains}`
+      : `https://${domains}`;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Sever Premium",
+              description: `Sever Premium — ${planLabel}`,
+            },
+            unit_amount: Math.round(amount * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        userId: req.user.id,
+        type: "premium",
+        plan,
+        durationDays: durationDays.toString(),
+      },
+      success_url: `${baseUrl}/?premium_session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+      cancel_url: `${baseUrl}/`,
+    });
+
+    res.json({ url: session.url, sessionId: session.id });
+  } catch (err: any) {
+    req.log.error({ err }, "Failed to create premium checkout session");
+    res.status(500).json({ error: "Failed to create checkout session" });
+  }
+});
+
+router.post("/stripe/confirm-premium", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const { sessionId } = req.body;
+  if (!sessionId || typeof sessionId !== "string") {
+    res.status(400).json({ error: "sessionId required" });
+    return;
+  }
+
+  try {
+    const stripe = await getUncachableStripeClient();
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status !== "paid") {
+      res.status(402).json({ error: "Payment not completed" });
+      return;
+    }
+    if (session.metadata?.userId !== req.user.id) {
+      res.status(403).json({ error: "Session does not belong to this user" });
+      return;
+    }
+    if (session.metadata?.type !== "premium") {
+      res.status(400).json({ error: "Not a premium session" });
+      return;
+    }
+
+    const durationDays = parseInt(session.metadata?.durationDays ?? "30", 10);
+    const pricePaid = round2((session.amount_total ?? 0) / 100);
+
+    let activated = false;
+    await db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(processedSessionsTable)
+        .values({ sessionId, userId: req.user.id, depositAmount: pricePaid.toFixed(2) })
+        .onConflictDoNothing()
+        .returning();
+
+      if (inserted.length === 0) return; // idempotent — already processed
+
+      const now = new Date();
+      const premiumUntil = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+      await tx
+        .update(profilesTable)
+        .set({ isPremium: true, premiumSince: now, premiumUntil })
+        .where(eq(profilesTable.userId, req.user.id));
+
+      activated = true;
+    });
+
+    const out = await buildMyProfile(req.user.id);
+    res.json({ success: true, activated, premiumUntil: out.premiumUntil });
+  } catch (err: any) {
+    req.log.error({ err }, "Failed to confirm premium");
+    res.status(500).json({ error: "Failed to confirm premium" });
+  }
+});
+
 export default router;

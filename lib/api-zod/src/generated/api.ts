@@ -112,6 +112,11 @@ export const GetMyProfileResponse = zod.object({
   totalBorrowed: zod.number(),
   onTimePayments: zod.number(),
   latePayments: zod.number(),
+  isPremium: zod.boolean(),
+  premiumUntil: zod
+    .string()
+    .nullable()
+    .describe("ISO timestamp when premium expires"),
 });
 
 /**
@@ -141,6 +146,11 @@ export const UpdateMyProfileResponse = zod.object({
   totalBorrowed: zod.number(),
   onTimePayments: zod.number(),
   latePayments: zod.number(),
+  isPremium: zod.boolean(),
+  premiumUntil: zod
+    .string()
+    .nullable()
+    .describe("ISO timestamp when premium expires"),
 });
 
 /**
@@ -171,6 +181,11 @@ export const DepositFundsResponse = zod.object({
   totalBorrowed: zod.number(),
   onTimePayments: zod.number(),
   latePayments: zod.number(),
+  isPremium: zod.boolean(),
+  premiumUntil: zod
+    .string()
+    .nullable()
+    .describe("ISO timestamp when premium expires"),
 });
 
 /**
@@ -196,6 +211,11 @@ export const WithdrawFundsResponse = zod.object({
   totalBorrowed: zod.number(),
   onTimePayments: zod.number(),
   latePayments: zod.number(),
+  isPremium: zod.boolean(),
+  premiumUntil: zod
+    .string()
+    .nullable()
+    .describe("ISO timestamp when premium expires"),
 });
 
 /**
@@ -787,6 +807,11 @@ export const ChangeUsernameResponse = zod.object({
   totalBorrowed: zod.number(),
   onTimePayments: zod.number(),
   latePayments: zod.number(),
+  isPremium: zod.boolean(),
+  premiumUntil: zod
+    .string()
+    .nullable()
+    .describe("ISO timestamp when premium expires"),
 });
 
 /**

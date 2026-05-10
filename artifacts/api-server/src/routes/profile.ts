@@ -88,6 +88,8 @@ async function buildMyProfile(userId: string) {
     totalBorrowed: num(borrowAgg?.total ?? 0),
     onTimePayments: profile.onTimePayments,
     latePayments: profile.latePayments,
+    isPremium: profile.isPremium && (!profile.premiumUntil || profile.premiumUntil > new Date()),
+    premiumUntil: profile.premiumUntil?.toISOString() ?? null,
   });
 }
 
