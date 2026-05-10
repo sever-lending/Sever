@@ -155,12 +155,12 @@ router.post("/stripe/confirm-deposit", async (req, res): Promise<void> => {
 });
 
 router.post("/stripe/donation-session", async (req, res): Promise<void> => {
-  const { amount } = req.body;
-  const validAmounts = [3, 5, 10, 25];
-  if (!amount || !validAmounts.includes(Number(amount))) {
-    res.status(400).json({ error: "Amount must be one of $3, $5, $10, or $25" });
+  const raw = Number(req.body?.amount);
+  if (!raw || !isFinite(raw) || raw < 1 || raw > 50000) {
+    res.status(400).json({ error: "Amount must be between $1 and $50,000." });
     return;
   }
+  const amount = Math.round(raw * 100) / 100;
 
   try {
     const stripe = await getUncachableStripeClient();
@@ -177,17 +177,17 @@ router.post("/stripe/donation-session", async (req, res): Promise<void> => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "Support Sever",
-              description: "Help keep the platform independent and growing",
+              name: "Support Sever Lending",
+              description: "Helps cover server costs, development, and platform improvements",
             },
-            unit_amount: Number(amount) * 100,
+            unit_amount: Math.round(amount * 100),
           },
           quantity: 1,
         },
       ],
-      metadata: { type: "donation", amount: String(amount) },
-      success_url: `${baseUrl}/?donated=1`,
-      cancel_url: `${baseUrl}/`,
+      metadata: { type: "donation", amount: amount.toFixed(2) },
+      success_url: `${baseUrl}/support?donated=1`,
+      cancel_url: `${baseUrl}/support`,
     });
 
     res.json({ url: session.url });

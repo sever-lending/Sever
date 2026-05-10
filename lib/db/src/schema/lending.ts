@@ -249,5 +249,26 @@ export type Installment = typeof installmentsTable.$inferSelect;
 export type Activity = typeof activityTable.$inferSelect;
 export type Notification = typeof notificationsTable.$inferSelect;
 export type ProcessedSession = typeof processedSessionsTable.$inferSelect;
+export const feedbackTable = pgTable(
+  "feedback",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
+    name: varchar("name", { length: 100 }),
+    email: varchar("email", { length: 200 }),
+    subject: varchar("subject", { length: 200 }),
+    message: text("message").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("IDX_feedback_created").on(table.createdAt)],
+);
+
 export type LoanMessage = typeof loanMessagesTable.$inferSelect;
 export type DirectMessage = typeof directMessagesTable.$inferSelect;
+export type Feedback = typeof feedbackTable.$inferSelect;

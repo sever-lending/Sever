@@ -11,6 +11,7 @@ import stripeRouter from "./stripe";
 import kycRouter from "./kyc";
 import connectRouter from "./connect";
 import messagesRouter from "./messages";
+import feedbackRouter from "./feedback";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(stripeRouter);
 router.use(kycRouter);
 router.use(connectRouter);
 router.use(messagesRouter);
+router.use(feedbackRouter);
 
 export default router;

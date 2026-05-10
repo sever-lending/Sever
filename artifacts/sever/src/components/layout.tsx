@@ -91,6 +91,8 @@ export function Layout({ children }: LayoutProps) {
             <span>© {new Date().getFullYear()} Sever Lending, LLC. All rights reserved.</span>
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-4">
+            <Link href="/support" className="hover:text-foreground transition-colors">Support & Feedback</Link>
+            <span className="h-3 w-px bg-border/60 hidden sm:block" />
             <Link href="/legal/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
             <Link href="/legal/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link href="/legal/disclaimer" className="hover:text-foreground transition-colors">Disclaimer</Link>

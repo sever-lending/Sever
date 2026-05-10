@@ -2,7 +2,17 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, DollarSign, Users, Activity, AlertCircle, BarChart3, ArrowUpRight, Clock } from "lucide-react";
+import { TrendingUp, DollarSign, Users, Activity, AlertCircle, BarChart3, ArrowUpRight, Clock, MessageSquarePlus } from "lucide-react";
+
+interface FeedbackItem {
+  id: string;
+  userId: string | null;
+  name: string | null;
+  email: string | null;
+  subject: string | null;
+  message: string;
+  createdAt: string;
+}
 
 interface RevenueData {
   revenue: {
@@ -59,6 +69,7 @@ export function Admin() {
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}api/admin/revenue`, {
@@ -75,6 +86,11 @@ export function Admin() {
       .then((d) => { if (d) setData(d); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+
+    fetch(`${import.meta.env.BASE_URL}api/admin/feedback`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setFeedback(d.feedback ?? []); })
+      .catch(() => {});
   }, []);
 
   if (loading) {
@@ -285,6 +301,46 @@ export function Admin() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      {/* Feedback Inbox */}
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+          <MessageSquarePlus className="h-4 w-4" />
+          Feedback &amp; Questions ({feedback.length})
+        </h2>
+        {feedback.length === 0 ? (
+          <div className="rounded-lg border border-border p-12 text-center">
+            <MessageSquarePlus className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">No messages yet.</p>
+            <p className="text-xs text-muted-foreground mt-1">Submissions from the Support page will appear here.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {feedback.map((fb) => (
+              <div key={fb.id} className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <div className="flex flex-wrap items-center gap-2 justify-between">
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    {fb.subject ? (
+                      <span className="font-semibold">{fb.subject}</span>
+                    ) : (
+                      <span className="text-muted-foreground italic">No subject</span>
+                    )}
+                    {fb.name && <Badge variant="outline" className="text-xs">{fb.name}</Badge>}
+                    {fb.email && (
+                      <a href={`mailto:${fb.email}`} className="text-primary text-xs hover:underline">{fb.email}</a>
+                    )}
+                    {fb.userId && (
+                      <Badge variant="secondary" className="text-xs font-mono">{fb.userId.slice(0, 10)}…</Badge>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">{timeAgo(fb.createdAt)}</span>
+                </div>
+                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{fb.message}</p>
+              </div>
+            ))}
           </div>
         )}
       </div>

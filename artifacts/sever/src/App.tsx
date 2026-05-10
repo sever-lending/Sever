@@ -30,6 +30,7 @@ import { Disclaimer } from "@/pages/legal/disclaimer";
 import { LoanContract } from "@/pages/legal/contract";
 import { Tutorial } from "@/pages/tutorial";
 import { Messages } from "@/pages/messages";
+import { Support } from "@/pages/support";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,8 @@ function Router() {
         <Route path="/kyc">
           <ProtectedRoute><KYC /></ProtectedRoute>
         </Route>
+
+        <Route path="/support" component={Support} />
 
         <Route path="/legal/terms" component={Terms} />
         <Route path="/legal/privacy" component={Privacy} />

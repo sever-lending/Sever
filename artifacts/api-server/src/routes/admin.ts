@@ -5,6 +5,7 @@ import {
   profilesTable,
   loansTable,
   fundingsTable,
+  feedbackTable,
 } from "@workspace/db";
 import { desc, sql } from "drizzle-orm";
 
@@ -119,6 +120,21 @@ router.get("/admin/revenue", async (req: Request, res: Response): Promise<void> 
       createdAt: t.createdAt,
     })),
   });
+});
+
+router.get("/admin/feedback", async (req: Request, res: Response): Promise<void> => {
+  if (!isAdmin(req)) {
+    res.status(!req.isAuthenticated() ? 401 : 403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const rows = await db
+    .select()
+    .from(feedbackTable)
+    .orderBy(desc(feedbackTable.createdAt))
+    .limit(200);
+
+  res.json({ feedback: rows });
 });
 
 export default router;
