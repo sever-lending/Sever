@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users, BookOpen, MessageSquare, Megaphone } from "lucide-react";
+import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users, BookOpen, MessageSquare, Megaphone, LifeBuoy } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -33,12 +33,14 @@ export function Layout({ children }: LayoutProps) {
         { href: "/messages", label: "Messages", icon: MessageSquare },
         { href: "/lenders", label: "Lenders", icon: Users },
         { href: "/updates", label: "Updates", icon: Megaphone },
+        { href: "/help", label: "Help", icon: LifeBuoy },
       ]
     : [
         { href: "/", label: "Home", icon: Home },
         { href: "/lenders", label: "Lenders", icon: Users },
         { href: "/updates", label: "Updates", icon: Megaphone },
-        { href: "/tutorial", label: "Guide", icon: BookOpen },
+        { href: "/getting-started", label: "Get Started", icon: BookOpen },
+        { href: "/help", label: "Help", icon: LifeBuoy },
       ];
 
   return (
@@ -112,6 +114,8 @@ export function Layout({ children }: LayoutProps) {
               @severlending
             </a>
             <span className="h-3 w-px bg-border/60 hidden sm:block" />
+            <Link href="/getting-started" className="hover:text-foreground transition-colors">Get Started</Link>
+            <Link href="/help" className="hover:text-foreground transition-colors">Help Center</Link>
             <Link href="/updates" className="hover:text-foreground transition-colors">Updates</Link>
             <Link href="/support" className="hover:text-foreground transition-colors">Support & Feedback</Link>
             <span className="h-3 w-px bg-border/60 hidden sm:block" />

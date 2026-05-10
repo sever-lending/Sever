@@ -29,6 +29,8 @@ import { Privacy } from "@/pages/legal/privacy";
 import { Disclaimer } from "@/pages/legal/disclaimer";
 import { LoanContract } from "@/pages/legal/contract";
 import { Tutorial } from "@/pages/tutorial";
+import { GettingStarted } from "@/pages/getting-started";
+import { Help } from "@/pages/help";
 import { Messages } from "@/pages/messages";
 import { Support } from "@/pages/support";
 import { Updates } from "@/pages/updates";
@@ -88,6 +90,8 @@ function Router() {
           <ProtectedRoute><KYC /></ProtectedRoute>
         </Route>
 
+        <Route path="/getting-started" component={GettingStarted} />
+        <Route path="/help" component={Help} />
         <Route path="/support" component={Support} />
         <Route path="/updates" component={Updates} />
 
