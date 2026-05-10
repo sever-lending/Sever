@@ -27,6 +27,8 @@ export const profilesTable = pgTable("profiles", {
   stripeConnectId: varchar("stripe_connect_id"),
   kycSessionId: varchar("kyc_session_id"),
   kycVerifiedAt: timestamp("kyc_verified_at", { withTimezone: true }),
+  ageVerified: boolean("age_verified").notNull().default(false),
+  ageVerifiedAt: timestamp("age_verified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

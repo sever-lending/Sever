@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, or } from "drizzle-orm";
+import { assertClean } from "../lib/contentFilter";
 import {
   db,
   loanMessagesTable,
@@ -59,6 +60,8 @@ router.post("/loans/:id/messages", async (req, res): Promise<void> => {
   const loanId = req.params.id;
   const parsed = ContentBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Content required (1-1000 chars)" }); return; }
+  const msgErr = assertClean(parsed.data.content, "Message");
+  if (msgErr) { res.status(400).json({ error: msgErr }); return; }
 
   const [loan] = await db.select().from(loansTable).where(eq(loansTable.id, loanId));
   if (!loan) { res.status(404).json({ error: "Loan not found" }); return; }
@@ -197,6 +200,8 @@ router.post("/messages/:userId", async (req, res): Promise<void> => {
   if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   const parsed = ContentBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Content required (1-1000 chars)" }); return; }
+  const dmErr = assertClean(parsed.data.content, "Message");
+  if (dmErr) { res.status(400).json({ error: dmErr }); return; }
   const me = req.user.id;
   const toUserId = req.params.userId;
   if (me === toUserId) { res.status(400).json({ error: "Cannot message yourself" }); return; }

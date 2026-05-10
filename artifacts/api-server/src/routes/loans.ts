@@ -31,6 +31,7 @@ import {
   num,
   round2,
 } from "../lib/lending";
+import { assertClean } from "../lib/contentFilter";
 import { mapLoanDetail, mapLoanSummary } from "../lib/loan-mapper";
 import { ensureProfile } from "./profile";
 import { notify } from "../lib/notify";
@@ -213,6 +214,11 @@ router.post("/loans", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const titleErr = assertClean(req.body?.title ?? "", "Title");
+  if (titleErr) { res.status(400).json({ error: titleErr }); return; }
+  const descErr = assertClean(req.body?.description ?? "", "Description");
+  if (descErr) { res.status(400).json({ error: descErr }); return; }
+
   await ensureProfile(req.user.id);
   const { title, principal, interestRate, termMonths, purpose, description } =
     parsed.data;

@@ -1,10 +1,15 @@
 import { Router, type IRouter } from "express";
 import { db, feedbackTable } from "@workspace/db";
+import { assertClean } from "../lib/contentFilter";
 
 const router: IRouter = Router();
 
 router.post("/feedback", async (req, res): Promise<void> => {
   const { name, email, subject, message } = req.body;
+
+  const filterErr = message ? assertClean(message, "Message") : null;
+  if (filterErr) { res.status(400).json({ error: filterErr }); return; }
+  if (subject && assertClean(subject, "Subject")) { res.status(400).json({ error: assertClean(subject, "Subject") }); return; }
 
   if (!message || typeof message !== "string" || message.trim().length < 5) {
     res.status(400).json({ error: "Message must be at least 5 characters." });

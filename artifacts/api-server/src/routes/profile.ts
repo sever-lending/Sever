@@ -175,5 +175,27 @@ router.post("/profile/withdraw", async (req, res): Promise<void> => {
   res.json(WithdrawFundsResponse.parse(out));
 });
 
+router.get("/profile/age-status", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const profile = await ensureProfile(req.user.id);
+  res.json({ ageVerified: profile.ageVerified ?? false });
+});
+
+router.post("/profile/age-verify", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  await ensureProfile(req.user.id);
+  await db
+    .update(profilesTable)
+    .set({ ageVerified: true, ageVerifiedAt: new Date() })
+    .where(eq(profilesTable.userId, req.user.id));
+  res.json({ ok: true });
+});
+
 export { ensureProfile, buildMyProfile };
 export default router;

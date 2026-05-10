@@ -31,6 +31,7 @@ import { LoanContract } from "@/pages/legal/contract";
 import { Tutorial } from "@/pages/tutorial";
 import { Messages } from "@/pages/messages";
 import { Support } from "@/pages/support";
+import { AgeGateModal } from "@/components/age-gate-modal";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -106,6 +107,7 @@ function App() {
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
           <UsernamePrompt />
+          <AgeGateModal />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
