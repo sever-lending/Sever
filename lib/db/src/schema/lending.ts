@@ -274,3 +274,27 @@ export const feedbackTable = pgTable(
 export type LoanMessage = typeof loanMessagesTable.$inferSelect;
 export type DirectMessage = typeof directMessagesTable.$inferSelect;
 export type Feedback = typeof feedbackTable.$inferSelect;
+
+export const platformUpdatesTable = pgTable(
+  "platform_updates",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body").notNull(),
+    kind: varchar("kind", { length: 30 }).notNull().default("announcement"),
+    published: boolean("published").notNull().default(false),
+    pinned: boolean("pinned").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [index("IDX_platform_updates_created").on(table.createdAt)],
+);
+
+export type PlatformUpdate = typeof platformUpdatesTable.$inferSelect;

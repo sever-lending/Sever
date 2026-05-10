@@ -31,6 +31,7 @@ import { LoanContract } from "@/pages/legal/contract";
 import { Tutorial } from "@/pages/tutorial";
 import { Messages } from "@/pages/messages";
 import { Support } from "@/pages/support";
+import { Updates } from "@/pages/updates";
 import { AgeGateModal } from "@/components/age-gate-modal";
 import NotFound from "@/pages/not-found";
 
@@ -88,6 +89,7 @@ function Router() {
         </Route>
 
         <Route path="/support" component={Support} />
+        <Route path="/updates" component={Updates} />
 
         <Route path="/legal/terms" component={Terms} />
         <Route path="/legal/privacy" component={Privacy} />

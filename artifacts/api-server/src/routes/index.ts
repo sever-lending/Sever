@@ -12,6 +12,7 @@ import kycRouter from "./kyc";
 import connectRouter from "./connect";
 import messagesRouter from "./messages";
 import feedbackRouter from "./feedback";
+import updatesRouter from "./updates";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(kycRouter);
 router.use(connectRouter);
 router.use(messagesRouter);
 router.use(feedbackRouter);
+router.use(updatesRouter);
 
 export default router;

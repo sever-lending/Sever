@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
-import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users, BookOpen, MessageSquare } from "lucide-react";
+import { LogOut, Home, LayoutDashboard, Store, HandCoins, Briefcase, Wallet, UserCircle, Users, BookOpen, MessageSquare, Megaphone } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -32,10 +32,12 @@ export function Layout({ children }: LayoutProps) {
         { href: "/wallet", label: "Wallet", icon: Wallet },
         { href: "/messages", label: "Messages", icon: MessageSquare },
         { href: "/lenders", label: "Lenders", icon: Users },
+        { href: "/updates", label: "Updates", icon: Megaphone },
       ]
     : [
         { href: "/", label: "Home", icon: Home },
         { href: "/lenders", label: "Lenders", icon: Users },
+        { href: "/updates", label: "Updates", icon: Megaphone },
         { href: "/tutorial", label: "Guide", icon: BookOpen },
       ];
 
@@ -110,6 +112,7 @@ export function Layout({ children }: LayoutProps) {
               @severlending
             </a>
             <span className="h-3 w-px bg-border/60 hidden sm:block" />
+            <Link href="/updates" className="hover:text-foreground transition-colors">Updates</Link>
             <Link href="/support" className="hover:text-foreground transition-colors">Support & Feedback</Link>
             <span className="h-3 w-px bg-border/60 hidden sm:block" />
             <Link href="/legal/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
