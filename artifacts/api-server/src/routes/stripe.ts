@@ -436,4 +436,36 @@ router.post("/stripe/webhook", async (req, res): Promise<void> => {
   }
 });
 
+/**
+ * Stripe Billing Portal — lets premium users manage or cancel their subscription.
+ * Returns a { url } the client should redirect to.
+ */
+router.post("/stripe/portal-session", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  try {
+    const profile = await ensureProfile(req.user.id);
+    if (!profile.stripeCustomerId) {
+      res.status(404).json({ error: "No Stripe customer found — you may not have an active subscription." });
+      return;
+    }
+
+    const stripe = await getUncachableStripeClient();
+    const baseUrl = getBaseUrl();
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripeCustomerId,
+      return_url: `${baseUrl}/profile`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err: any) {
+    req.log.error({ err }, "Failed to create billing portal session");
+    res.status(500).json({ error: "Failed to open subscription management" });
+  }
+});
+
 export default router;

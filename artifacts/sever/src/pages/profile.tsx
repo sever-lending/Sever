@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, UserCircle, Save, AtSign } from "lucide-react";
+import { ShieldCheck, UserCircle, Save, AtSign, Crown, ExternalLink, CalendarDays } from "lucide-react";
 
 export function Profile() {
   const { data: profile, isLoading } = useGetMyProfile();
@@ -26,6 +26,27 @@ export function Profile() {
   const [bio, setBio] = useState("");
   const [usernameInput, setUsernameInput] = useState("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/stripe/portal-session`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast({ title: "Error", description: data.error ?? "Could not open subscription management.", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Could not open subscription management.", variant: "destructive" });
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
@@ -214,6 +235,67 @@ export function Profile() {
         </div>
 
         <div className="space-y-6">
+          {/* Premium Status Card */}
+          <Card className={`border rounded-none shadow-none ${profile.isPremium ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+            <CardHeader className="border-b border-border pb-4 flex flex-row items-center justify-between">
+              <CardTitle className="font-mono uppercase tracking-widest text-base flex items-center gap-2">
+                <Crown className={`h-4 w-4 ${profile.isPremium ? "text-yellow-400" : "text-muted-foreground"}`} />
+                Premium
+              </CardTitle>
+              {profile.isPremium && (
+                <Badge className="bg-primary/20 text-primary border-primary/30 font-mono text-xs uppercase tracking-widest">
+                  Active
+                </Badge>
+              )}
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              {profile.isPremium ? (
+                <>
+                  <div className="space-y-3 text-sm font-mono">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <CalendarDays className="h-4 w-4 shrink-0" />
+                      <span className="text-xs uppercase">Auto-renews</span>
+                    </div>
+                    <div className="text-primary font-bold text-lg">
+                      {profile.premiumUntil
+                        ? new Date(profile.premiumUntil).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                        : "Active"}
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-xs text-muted-foreground font-mono">
+                    <div className="flex items-center gap-2">✓ 0.75% origination fee (half price)</div>
+                    <div className="flex items-center gap-2">✓ $100K loan limit</div>
+                    <div className="flex items-center gap-2">✓ Priority marketplace listing</div>
+                    <div className="flex items-center gap-2">✓ Advanced analytics</div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full rounded-none font-mono text-xs uppercase tracking-widest"
+                    onClick={handleManageSubscription}
+                    disabled={portalLoading}
+                  >
+                    <ExternalLink className="mr-2 h-3 w-3" />
+                    {portalLoading ? "Opening..." : "Manage Subscription"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground font-mono leading-relaxed">
+                    Get half-price origination fees, 2× loan limits, priority listing, and advanced analytics.
+                  </p>
+                  <Button
+                    className="w-full rounded-none font-bold tracking-tight bg-primary text-primary-foreground"
+                    onClick={() => window.location.href = "/"}
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    Upgrade to Premium
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="bg-card border-border rounded-none shadow-none sticky top-24">
             <CardHeader className="bg-muted/50 border-b border-border pb-4 flex flex-row items-center justify-between">
               <CardTitle className="font-mono uppercase tracking-widest text-base">Trust Score</CardTitle>

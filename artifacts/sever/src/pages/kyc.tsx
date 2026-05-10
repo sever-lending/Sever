@@ -37,6 +37,8 @@ export function KYC() {
   );
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pollStart] = useState(() => Date.now());
+  const POLL_TIMEOUT_MS = 5 * 60 * 1000; // stop polling after 5 minutes
 
   const { data: statusData, isLoading: statusLoading, refetch } = useQuery({
     queryKey: ["kyc-status", sessionId],
@@ -44,7 +46,9 @@ export function KYC() {
     enabled: !!sessionId,
     refetchInterval: (query) => {
       const s = query.state.data?.status;
-      return s === "pending" ? 5000 : false;
+      if (s !== "pending") return false;
+      if (Date.now() - pollStart > POLL_TIMEOUT_MS) return false;
+      return 5000;
     },
   });
 
