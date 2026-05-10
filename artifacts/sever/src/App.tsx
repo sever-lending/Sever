@@ -21,7 +21,7 @@ import { Portfolio } from "@/pages/portfolio";
 import { Wallet } from "@/pages/wallet";
 import { Profile } from "@/pages/profile";
 import { Lenders } from "@/pages/lenders";
-import { Admin } from "@/pages/admin";
+import { Admin } from "@/pages/admin/index";
 import { AdminLogin } from "@/pages/admin-login";
 import { KYC } from "@/pages/kyc";
 import { Terms } from "@/pages/legal/terms";

@@ -1,14 +1,9 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, platformUpdatesTable } from "@workspace/db";
 import { desc, eq } from "drizzle-orm";
+import { isAdmin, isOwner, deny } from "../lib/adminAuth";
 
 const router: IRouter = Router();
-
-function isAdmin(req: Request): boolean {
-  const adminUserId = process.env.ADMIN_USER_ID;
-  if (!adminUserId) return false;
-  return req.isAuthenticated() && req.user.id === adminUserId;
-}
 
 router.get("/updates", async (_req: Request, res: Response): Promise<void> => {
   const rows = await db
@@ -21,10 +16,7 @@ router.get("/updates", async (_req: Request, res: Response): Promise<void> => {
 });
 
 router.get("/admin/updates", async (req: Request, res: Response): Promise<void> => {
-  if (!isAdmin(req)) {
-    res.status(!req.isAuthenticated() ? 401 : 403).json({ error: "Forbidden" });
-    return;
-  }
+  if (!(await isAdmin(req))) { deny(req, res); return; }
   const rows = await db
     .select()
     .from(platformUpdatesTable)
@@ -34,10 +26,7 @@ router.get("/admin/updates", async (req: Request, res: Response): Promise<void> 
 });
 
 router.post("/admin/updates", async (req: Request, res: Response): Promise<void> => {
-  if (!isAdmin(req)) {
-    res.status(!req.isAuthenticated() ? 401 : 403).json({ error: "Forbidden" });
-    return;
-  }
+  if (!(await isAdmin(req))) { deny(req, res); return; }
   const { title, body, kind, published, pinned } = req.body;
   if (!title?.trim() || !body?.trim()) {
     res.status(400).json({ error: "Title and body are required" });
@@ -59,10 +48,7 @@ router.post("/admin/updates", async (req: Request, res: Response): Promise<void>
 });
 
 router.patch("/admin/updates/:id", async (req: Request, res: Response): Promise<void> => {
-  if (!isAdmin(req)) {
-    res.status(!req.isAuthenticated() ? 401 : 403).json({ error: "Forbidden" });
-    return;
-  }
+  if (!(await isAdmin(req))) { deny(req, res); return; }
   const { id } = req.params;
   const updates: Partial<{ title: string; body: string; kind: string; published: boolean; pinned: boolean }> = {};
   if (req.body.title !== undefined) updates.title = String(req.body.title).trim().slice(0, 200);
@@ -73,7 +59,6 @@ router.patch("/admin/updates/:id", async (req: Request, res: Response): Promise<
   }
   if (req.body.published !== undefined) updates.published = Boolean(req.body.published);
   if (req.body.pinned !== undefined) updates.pinned = Boolean(req.body.pinned);
-
   const [row] = await db
     .update(platformUpdatesTable)
     .set(updates)
@@ -84,10 +69,7 @@ router.patch("/admin/updates/:id", async (req: Request, res: Response): Promise<
 });
 
 router.delete("/admin/updates/:id", async (req: Request, res: Response): Promise<void> => {
-  if (!isAdmin(req)) {
-    res.status(!req.isAuthenticated() ? 401 : 403).json({ error: "Forbidden" });
-    return;
-  }
+  if (!(await isAdmin(req))) { deny(req, res); return; }
   await db.delete(platformUpdatesTable).where(eq(platformUpdatesTable.id, req.params.id));
   res.json({ ok: true });
 });

@@ -275,6 +275,20 @@ export type LoanMessage = typeof loanMessagesTable.$inferSelect;
 export type DirectMessage = typeof directMessagesTable.$inferSelect;
 export type Feedback = typeof feedbackTable.$inferSelect;
 
+export const adminUsersTable = pgTable("admin_users", {
+  userId: varchar("user_id")
+    .primaryKey()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  addedBy: varchar("added_by").references(() => usersTable.id, {
+    onDelete: "set null",
+  }),
+  addedAt: timestamp("added_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type AdminUser = typeof adminUsersTable.$inferSelect;
+
 export const platformUpdatesTable = pgTable(
   "platform_updates",
   {
