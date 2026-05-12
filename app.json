@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "86e4ed76-4327-4e7e-8897-01f5af6939d6"
+      }
+    },
+    "android": {
+      "package": "com.severlending.workspace"
+    }
+  }
+}
