@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { useListLoans, useGetPlatformStats } from "@workspace/api-client-react";
+import { AdBanner } from "@/components/AdBanner";
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -156,6 +157,7 @@ export default function MarketsScreen() {
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 150 : 110 }]}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
+          ListFooterComponent={<AdBanner />}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Feather name="inbox" size={44} color={colors.mutedForeground} />

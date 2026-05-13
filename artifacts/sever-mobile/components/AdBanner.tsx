@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import { Platform, View, StyleSheet } from "react-native";
+import { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
 import { useGetMyProfile } from "@workspace/api-client-react";
-import { useAuth } from "@/context/AuthContext";
 
-const PUB = "ca-pub-2000477545504161";
-const PREMIUM_TIERS = new Set(["gold", "platinum"]);
+const ADSENSE_PUB = "ca-pub-2000477545504161";
+const ADMOB_UNIT_ID = __DEV__
+  ? TestIds.BANNER
+  : "ca-app-pub-9740722424629290/7684812262";
 
 declare global {
   interface Window {
@@ -12,22 +14,30 @@ declare global {
   }
 }
 
-export function AdBanner() {
-  const { user } = useAuth();
-  const { data: profile } = useGetMyProfile();
+function NativeBanner({ isPremium }: { isPremium: boolean }) {
+  if (isPremium) return null;
+  return (
+    <View style={styles.nativeWrap}>
+      <BannerAd
+        unitId={ADMOB_UNIT_ID}
+        size={BannerAdSize.BANNER}
+        requestOptions={{ requestNonPersonalizedAdsOnly: false }}
+      />
+    </View>
+  );
+}
+
+function WebBanner({ isPremium }: { isPremium: boolean }) {
   const didInject = useRef(false);
 
-  const isPremium = !!profile?.tier && PREMIUM_TIERS.has(profile.tier as string);
-
   useEffect(() => {
-    if (Platform.OS !== "web") return;
     if (isPremium || didInject.current) return;
     didInject.current = true;
 
     if (!document.querySelector('script[src*="adsbygoogle"]')) {
       const s = document.createElement("script");
       s.async = true;
-      s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}`;
+      s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUB}`;
       s.crossOrigin = "anonymous";
       document.head.appendChild(s);
     }
@@ -39,7 +49,7 @@ export function AdBanner() {
       const ins = document.createElement("ins");
       ins.className = "adsbygoogle";
       ins.style.cssText = "display:block;width:100%;height:50px;";
-      ins.setAttribute("data-ad-client", PUB);
+      ins.setAttribute("data-ad-client", ADSENSE_PUB);
       ins.setAttribute("data-ad-format", "auto");
       ins.setAttribute("data-full-width-responsive", "true");
       el.appendChild(ins);
@@ -50,14 +60,24 @@ export function AdBanner() {
     });
   }, [isPremium]);
 
-  if (Platform.OS !== "web") return null;
   if (isPremium) return null;
+  return <View nativeID="sever-mobile-ad" style={styles.webWrap} />;
+}
 
-  return <View nativeID="sever-mobile-ad" style={styles.wrap} />;
+export function AdBanner() {
+  const { data: profile } = useGetMyProfile();
+  const isPremium = !!(profile as any)?.isPremium;
+
+  if (Platform.OS === "web") return <WebBanner isPremium={isPremium} />;
+  return <NativeBanner isPremium={isPremium} />;
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  nativeWrap: {
+    alignItems: "center",
+    marginVertical: 8,
+  },
+  webWrap: {
     position: "absolute",
     bottom: 84,
     left: 0,
